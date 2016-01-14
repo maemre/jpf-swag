@@ -57,6 +57,16 @@ The resulting jar will be in `target/scala-2.11` directory.
 
 ### Modify native classpath on your projects.
 
-Unfortunately JPF is quite stubborn about project structures and we need to point out our resulting jar file explicitly. One way to do it is adding (and modifying) following line to any project's `.jpf` file.
+Unfortunately JPF is quite stubborn about project structures and we need to point out our resulting jar file explicitly. One way to do it is adding (and modifying) following line to any project's `.jpf` file:
 
+```
 native_classpath=PATH_TO_JPF_SWAG/jpf-swag/target/scala-2.11/jpf-swag.jar
+```
+
+## Using jpf-swag
+
+You need to add the listeners to your jpf configuration. You can try it out with current simple CFG listener by adding the following line to a `.jpf` file. This example listener will generate a CFG for every method whose name contains `foo`.
+
+```
+listener=edu.ucsb.cs.jpf.swag.CFGListener
+```
