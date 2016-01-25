@@ -17,6 +17,8 @@ unmanagedJars in Compile ++= {
     customJars.classpath
 }
 
+unmanagedJars in Compile += baseDirectory.value / "../jpf-symbc/lib/com.microsoft.z3.jar"
+
 assemblyJarName in assembly := s"${name.value}.jar"
 
 assemblyExcludedJars in assembly := { 
