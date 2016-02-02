@@ -1,0 +1,12 @@
+To make Apron and Japron:
+0. $ cd .../apron
+1. $ ./configure -java-prefix /usr/lib/jvm/java-7-openjdk-amd64 -no-cxx -no-ocaml -no-ocamlfind -no-ocaml-plugins
+2. $ mkdir japron/include
+3. $ cp /usr/lib/jvm/.../include/jni.h japron/include
+4. $ cp /usr/lib/jvm/.../include/jni_md.h japron/include
+5. $ sed --in-place=.bk '27a-Iinclude \\' japron/Makefile
+6. $ make
+
+To run a Japron test
+0. $ cd japron
+1. $ java -Djava.library.path=/usr/local/lib -ea -esa -Xcheck:jni gmp.Test
