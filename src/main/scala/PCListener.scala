@@ -71,10 +71,11 @@ case class DisjunctiveConstraint(val disjuncts: MSet[Constraint], val neg: Boole
     // check satisfiability of its negation: that ∧ ¬ this
 
     // TODO: simplify with conjunction-like stuff
-    println(this.prefix_notation)
+    // println(this.prefix_notation)
+    false
     // TODO: give the whole condition at once?
-    val composite = Seq(this.not, that).map((c:Constraint) ⇒ ConstraintSolver.parseSMTLIB2String(s"(assert ${c.prefix_notation})"))
-    ! ConstraintSolver.solveConstraints(composite)
+    //val composite = Seq(this.not, that).map((c:Constraint) ⇒ ConstraintSolver.parseSMTLIB2String(s"(assert ${c.prefix_notation})"))
+    //! ConstraintSolver.solveConstraints(composite)
   }
 
   override def prefix_notation: String = {
@@ -92,7 +93,7 @@ case class DisjunctiveConstraint(val disjuncts: MSet[Constraint], val neg: Boole
       val formula = z3.parseSMTLIB2String(prefix_notation, null, null, null, null)
       z3.post(formula)
       true
-    case _ ⇒ ???
+    case _ ⇒ true // ???
   }
 }
 
@@ -102,7 +103,7 @@ object DisjunctiveConstraint {
 
 class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
 
-  val methodToAnalyze = "twoifs"
+  val methodToAnalyze = "twoifs".toLowerCase
   val PCs: MMap[String, MMap[Int, DisjunctiveConstraint]] = MMap()
   jpf.addPublisherExtension(classOf[ConsolePublisher], this)
 
@@ -127,16 +128,17 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
     val pc = getPC(insn) // call for side-effect
     Option(cg) foreach { cg ⇒
       val pc = cg.getCurrentPC.make_copy
-
-      val oldConstraint = getPC(insn)
-      val newConstraint = oldConstraint | pc.header
-      if (newConstraint ⊑ oldConstraint) {
-        val pos = insn.getPosition
-        println(s"----------------- $pos Reached fixpoint: $oldConstraint")
-      } else {
-        pc.header = newConstraint
-        cg.setCurrentPC(pc)
-      }
+      val constraint = Helpers.parsePC(pc)
+      println(s"CONSTRAINT: $constraint")
+      // val oldConstraint = getPC(insn)
+      // val newConstraint = oldConstraint | pc.header
+      // if (newConstraint ⊑ oldConstraint) {
+      //   val pos = insn.getPosition
+      //   println(s"----------------- $pos Reached fixpoint: $oldConstraint")
+      // } else {
+      //   pc.header = newConstraint
+      //   //cg.setCurrentPC(pc)
+      // }
     }
   }
 
@@ -165,7 +167,7 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
     publisher.publishTopicStart("Path conditions")
 
     for ((mname, pcs) <- PCs) {
-      if (mname.contains(methodToAnalyze)) {
+      if (mname.toLowerCase.contains(methodToAnalyze)) {
         pw.println(s"Path conditions for ${mname}")
         for (insn <- pcs.keys.toSeq.sorted) {
           pw.println(s"$insn:\t${pcs(insn).prefix_notation}")
