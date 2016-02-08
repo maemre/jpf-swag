@@ -1,0 +1,14 @@
+# To make Apron and Japron. This doesn't build with PPL yet (which needs cpp):
+cd .../apron
+./configure -java-prefix /usr/lib/jvm/java-7-openjdk-amd64 no-cxx -no-ocaml -no-ocamlfind -no-ocaml-plugins
+mkdir japron/include
+cp /usr/lib/jvm/.../include/jni.h japron/include
+cp /usr/lib/jvm/.../include/jni_md.h japron/include
+sed --in-place=.bk '27a-Iinclude \\' japron/Makefile
+make; make install
+cd box; make; sudo make install; cd ..
+cd octagons; make; sudo make install; cd ..
+cd newpolka; make; sudo make install; cd ..
+cd japron; make; sudo make install
+java -Djava.library.path=/usr/local/lib -ea -esa -Xcheck:jni gmp.Test
+java -Djava.library.path=/usr/local/lib -ea -esa -Xcheck:jni apron.Test
