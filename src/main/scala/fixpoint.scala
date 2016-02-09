@@ -26,13 +26,16 @@ object DummyConstraint extends numeric.Constraint(null, null, null) {
 
   def simplify: Boolean = true
 
+  def not = this
+
   override def postToSolver(pb: ProblemGeneral) = true
 }
 
 class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
+  type Domain = NonrelationalDomain[Prefix, TrivialNumber]
 
   val methodToAnalyze = "twoifs".toLowerCase
-  var states = Map[Int, CompositeAbstractDomain]()
+  var states = Map[Int, Domain]()
   jpf.addPublisherExtension(classOf[ConsolePublisher], this)
 
   override def executeInstruction(vm: VM, thread: ThreadInfo, insn: Instruction): Unit = {
@@ -54,7 +57,7 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
       case e:numeric.IntegerExpression ⇒ NumValue(Helpers.parseNumExpr(e))
     }
 
-    val state: CompositeAbstractDomain = ???
+    val state: Domain = ???
     state.construct(pathCondition, stack)
 
     if (! states.contains(pos)) {

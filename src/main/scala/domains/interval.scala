@@ -49,7 +49,7 @@ case class Interval(lower: Option[Int], upper: Option[Int]) extends AbstractInte
 
   def %(that: Interval) = lift2(_/_)(this, that)
 
-  def toString = {
+  override def toString = {
     val low = lower.map(_.toString).getOrElse("-∞")
     val high = upper.map(_.toString).getOrElse("∞")
     s"Interval(${low}, ${high})"

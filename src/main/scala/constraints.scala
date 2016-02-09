@@ -20,6 +20,9 @@ sealed trait Constraint
 case class Not(c: Constraint) extends Constraint
 case class Disjunction(disjuncts: Set[Constraint]) extends Constraint
 case class Conjunction(conjuncts: Set[Constraint]) extends Constraint
+case object True extends Constraint
+case object False extends Constraint
+case class BoolVar(x: String) extends Constraint
 
 object Conjunction {
   def apply(conjuncts: Constraint*): Conjunction = Conjunction(conjuncts.toSet)
