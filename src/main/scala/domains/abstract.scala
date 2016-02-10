@@ -49,6 +49,13 @@ object AbstractBoolean {
 trait CompositeAbstractDomain[T] {
   def construct(pathCondition: Constraint, stack: IndexedSeq[StackValue]): Unit
 
+  /**
+    * Compute transition from this state to next state as described with
+    * `pathCondition` and `stack`. old values of stack variables are denoted
+    * with `stack_ID` where `ID` is the index on stack.
+    */
+  def transit(pathCondition: Constraint, stack: IndexedSeq[StackValue]): T
+
   def ⊔(that: T): T
 
   def ⊑(that: T): Boolean

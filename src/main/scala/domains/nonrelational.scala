@@ -21,6 +21,33 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
     ???
   }
 
+  def transit(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
+    val newi2n = stack.zipWithIndex collect {
+      case (NumValue(e), i) ⇒ StackID(i) → compute(e)
+    }
+    val newi2s = stack.zipWithIndex collect {
+      case (StringValue(e), i) ⇒ StackID(i) → compute(e)
+    }
+    // TODO: use path condition
+    NonrelationalDomain(newi2s.toMap, newi2n.toMap)
+  }
+
+  def compute(e: NumExpr): Num = {
+    ???
+  }
+
+  def compute(e: StringExpr): Str = e match {
+    case StringConst(s) ⇒ strGen.const(s)
+    case StringVar(x) ⇒
+      val id = if (x.startsWith("stack_")) {
+        StackID(x.substring("stack_".length).toInt)
+      } else {
+        Name(x)
+      }
+      i2s.getOrElse(id, strGen.bottom)
+    case Concat(lhs, rhs) ⇒ compute(lhs) concat compute(rhs)
+  }
+
   def ⊔(that: NonrelationalDomain[Str, Num]) = {
     val newi2s = for (i <- i2s.keySet ++ that.i2s.keySet) yield {
       (i2s.get(i), that.i2s.get(i)) match {
