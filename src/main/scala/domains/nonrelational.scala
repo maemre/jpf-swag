@@ -71,14 +71,14 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
   def ⊑(that: NonrelationalDomain[Str, Num]): Boolean = {
     for ((i, s) <- that.i2s) {
       i2s.get(i) match {
-        case Some(t) if !(s ⊑ t) => return false
+        case Some(t) if !(t ⊑ s) => return false
         case None => return false
         case _ => ()
       }
     }
     for ((i, s) <- that.i2n) {
       i2n.get(i) match {
-        case Some(t) if !(s ⊑ t) => return false
+        case Some(t) if !(t ⊑ s) => return false
         case None => return false
         case _ => ()
       }
