@@ -71,3 +71,13 @@ case class PrefixS(s: String) extends Prefix {
 
   def toConstraint(v: String) = StringConstraint(StringVar(v), StringComparator.startsWith, StringConst(s))
 }
+
+object ImplicitShim {
+  implicit object PrefixFactory extends AbstractStringFactory[Prefix] {
+    val top = PrefixS("")
+    val bottom = NoString
+    def const(s: String) = ConstS(s)
+  }
+}
+
+import ImplicitShim._

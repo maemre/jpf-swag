@@ -13,7 +13,10 @@ import gov.nasa.jpf.jvm.bytecode.{IfInstruction, GOTO, JVMReturnInstruction}
 import gov.nasa.jpf.symbc.numeric.solvers.{ProblemGeneral, ProblemZ3}
 
 import edu.ucsb.cs.jpf.swag.helpers._
+import edu.ucsb.cs.jpf.swag.constraints._
 import edu.ucsb.cs.jpf.swag.domains._
+import ImplicitShim._
+import ImplicitFactories._
 
 import scala.annotation.tailrec
 import scala.collection.JavaConversions._

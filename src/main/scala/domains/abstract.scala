@@ -62,7 +62,20 @@ trait CompositeAbstractDomain[T] {
   def projectOut(name: String): T
 }
 
-trait CompositeAbstractDomainFactory[T] {
-  def bottom: CompositeAbstractDomain[T]
-  def top: CompositeAbstractDomain[T]
+trait AbstractDomainFactory[T <: AbstractDomain[T]] {
+  def bottom: T
+  def top: T
+}
+
+trait AbstractStringFactory[T <: AbstractString[T]] extends AbstractDomainFactory[T] {
+  def const(s: String): T
+}
+
+trait AbstractNumberFactory[T <: AbstractNumber[T]] extends AbstractDomainFactory[T] {
+  def const(s: Int): T
+}
+
+trait CompositeAbstractDomainFactory[T <: CompositeAbstractDomain[T]] {
+  def bottom: T
+  def top: T
 }

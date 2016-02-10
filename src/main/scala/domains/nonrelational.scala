@@ -11,8 +11,12 @@ case class StackID(i: Int) extends ID {
 }
 
 case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber[Num]](
-  i2s:Map[ID, Str]=Map(),
-  i2n:Map[ID, Num]=Map()) extends CompositeAbstractDomain[NonrelationalDomain[Str, Num]] {
+  i2s:Map[ID, Str]=Map[ID, Str](),
+  i2n:Map[ID, Num]=Map[ID, Num]())
+  (
+    implicit val strGen: AbstractStringFactory[Str],
+    implicit val numGen: AbstractNumberFactory[Num]
+  ) extends CompositeAbstractDomain[NonrelationalDomain[Str, Num]] {
   def construct(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
     ???
   }
