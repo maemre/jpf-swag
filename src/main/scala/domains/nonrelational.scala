@@ -2,18 +2,6 @@ package edu.ucsb.cs.jpf.swag.domains
 
 import edu.ucsb.cs.jpf.swag.constraints._
 
-case class TrivialNumber(isTop: Boolean) extends AbstractNumber[TrivialNumber] {
-  def +(that: TrivialNumber) = copy(this.isTop && that.isTop)
-  def -(that: TrivialNumber) = copy(this.isTop && that.isTop)
-  def *(that: TrivialNumber) = copy(this.isTop && that.isTop)
-  def /(that: TrivialNumber) = copy(this.isTop && that.isTop)
-  def %(that: TrivialNumber) = copy(this.isTop && that.isTop)
-
-  def ⊔(that: TrivialNumber) = copy(this.isTop || that.isTop)
-  def ⊑(that: TrivialNumber) = !this.isTop || that.isTop
-  def toConstraint(v: String) = True
-}
-
 sealed trait ID
 case class Name(s: String) extends ID {
   override def toString = s"sym_$s"
