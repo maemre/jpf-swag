@@ -3,6 +3,20 @@ package edu.ucsb.cs.jpf.swag.domains
 import edu.ucsb.cs.jpf.swag.constraints._
 import scala.annotation.tailrec
 
+object ImplicitShim {
+  implicit object PrefixFactory extends AbstractStringFactory[Prefix] {
+    val top = PrefixS("")
+    val bottom = NoString
+    def const(s: String) = ConstS(s)
+    def valueOf(n: NumExpr) = n match {
+      case NumConst(n) ⇒ const(n.toString)
+      case _ ⇒ top
+    }
+  }
+}
+
+import ImplicitShim._
+
 sealed trait Prefix extends AbstractString[Prefix] {
   @tailrec
   private def lcprec(w: String, v: String, i: Int, l: Int): Int = if (i == l || w(i) != v(i)) {
@@ -41,6 +55,17 @@ case object NoString extends Prefix {
   def concat(s: Prefix) = this
   override def ⊑(s: Prefix): Boolean = true
   def toConstraint(v: String) = False
+
+  def indexOf(c: CharExpr): NumExpr = NoNumExpr
+  def lastIndexOf(c: CharExpr): NumExpr = NoNumExpr
+  def length(v: String) = NumericConstraint(NumVar(v), NumComparator.≡, NoNumExpr)
+  def replace(m: Prefix,r: Prefix) = NoString
+  def replaceAll(m: Prefix,r: Prefix) = NoString
+  def replaceFirst(m: Prefix,r: Prefix) = NoString
+  def substring(i: NumExpr) = NoString
+  def toLowerCase = NoString
+  def toUpperCase = NoString
+  def trim = NoString
 }
 
 case class ConstS(s: String) extends Prefix {
@@ -50,6 +75,27 @@ case class ConstS(s: String) extends Prefix {
     case PrefixS(t) => PrefixS(s + t)
   }
   
+  def indexOf(c: CharExpr): NumExpr = c match {
+    case CharConst(c) ⇒ NumConst(s indexOf c)
+    case _ ⇒ ???
+  }
+  def lastIndexOf(c: CharExpr): NumExpr = c match {
+    case CharConst(c) ⇒ NumConst(s lastIndexOf c)
+    case _ ⇒ ???
+  }
+  def length(v: String) = NumericConstraint(NumVar(v), NumComparator.≡, NumConst(s.length))
+  def replace(m: Prefix, r: Prefix) = ???
+  def replaceAll(m: Prefix, r: Prefix) = ???
+  def replaceFirst(m: Prefix, r: Prefix) = ???
+  def substring(i: NumExpr) = i match {
+    case NumConst(i) ⇒ if (i <= s.length) ConstS(s.substring(i.toInt)) else NoString
+    case _ ⇒ PrefixFactory.top
+  }
+
+  def toLowerCase = copy(s.toLowerCase)
+  def toUpperCase = copy(s.toUpperCase)
+  def trim = copy(s.trim)
+
   def ⊑(that: Prefix): Boolean = that match {
     case ConstS(t) => s == t
     case PrefixS(t) => s.startsWith(t)
@@ -63,6 +109,30 @@ case class PrefixS(s: String) extends Prefix {
     case NoString => NoString
     case _ => this
   }
+  def indexOf(c: CharExpr): NumExpr = c match {
+    case CharConst(c) ⇒
+      val constIdx = s indexOf c
+      if (constIdx >= 0)
+        NumConst(constIdx)
+      else
+        ???
+    case _ ⇒ ???
+  }
+  def lastIndexOf(c: CharExpr): NumExpr = ???
+  def length(v: String) = NumericConstraint(NumVar(v), NumComparator.≥, NumConst(s.length))
+  def replace(m: Prefix, r: Prefix) = ???
+  def replaceAll(m: Prefix, r: Prefix) = ???
+  def replaceFirst(m: Prefix, r: Prefix) = ???
+
+  def substring(i: NumExpr) = i match {
+    case NumConst(i) ⇒ if (i <= s.length) PrefixS(s.substring(i.toInt)) else PrefixS("")
+    case _ ⇒ PrefixFactory.top
+  }
+
+  def toLowerCase = copy(s.toLowerCase)
+  def toUpperCase = copy(s.toUpperCase)
+  def trim = copy(s.trim) // trim works instead of trimLeft because "a " ∈ PrefixS("a ") and "a ".trim = "a" ∉ PrefixS("a ".trimLeft)
+
   
   def ⊑(that: Prefix): Boolean = that match {
     case PrefixS(t) => s.startsWith(t)
@@ -71,13 +141,3 @@ case class PrefixS(s: String) extends Prefix {
 
   def toConstraint(v: String) = StringConstraint(StringVar(v), StringComparator.startsWith, StringConst(s))
 }
-
-object ImplicitShim {
-  implicit object PrefixFactory extends AbstractStringFactory[Prefix] {
-    val top = PrefixS("")
-    val bottom = NoString
-    def const(s: String) = ConstS(s)
-  }
-}
-
-import ImplicitShim._
