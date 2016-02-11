@@ -57,6 +57,7 @@ case class Substring(str: StringExpr, idx: NumExpr) extends StringExpr
 case class ValueOf(n: NumExpr) extends StringExpr
 case class ToUpperCase(str: StringExpr) extends StringExpr
 case class ToLowerCase(str: StringExpr) extends StringExpr
+case object NoStringExpr extends StringExpr
 
 sealed trait CharExpr
 case class CharConst(c: Char) extends CharExpr
