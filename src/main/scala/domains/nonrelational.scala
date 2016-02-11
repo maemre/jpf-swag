@@ -2,23 +2,117 @@ package edu.ucsb.cs.jpf.swag.domains
 
 import edu.ucsb.cs.jpf.swag.constraints._
 
-sealed trait ID
-case class Name(s: String) extends ID {
-  override def toString = s"sym_$s"
-}
-case class StackID(i: Int) extends ID {
-  override def toString = s"stack_$i"
+import scala.annotation.tailrec
+
+import scala.collection.mutable.{Map ⇒ MMap, Set ⇒ MSet, StringBuilder}
+
+import edu.ucsb.cs.jpf.swag.helpers._
+
+import Helpers.ι
+
+/**
+  * Helper class to extract variables from constraint trees easily.
+  */
+case class VariableExtractor(val strs:MSet[ID]=MSet[ID](), val nums:MSet[ID]=MSet[ID]()) {
+
+    def addVars(c: Constraint): Unit = c match {
+      case Disjunction(disjuncts) ⇒ disjuncts.map(addVars _)
+      case Conjunction(conjuncts) ⇒ conjuncts.map(addVars _)
+      case Not(c) ⇒ addVars(c)
+      case NumericConstraint(lhs, _, rhs) ⇒
+        addVars(lhs)
+        addVars(rhs)
+      case StringConstraint(lhs, _, rhs) ⇒
+        addVars(lhs)
+        addVars(rhs)
+      case BoolVar(_) | True | False ⇒ ()
+    }
+
+    def addVars(e: NumExpr): Unit = e match {
+      case NumVar(x) ⇒ nums += ι(x)
+      case Length(e) ⇒ addVars(e)
+      case IndexOf(e, _) ⇒ addVars(e)
+      case LastIndexOf(e, _) ⇒ addVars(e)
+      case NumUnopExpr(_, e) ⇒ addVars(e)
+      case NumBinopExpr(e1, _, e2) ⇒
+        addVars(e1)
+        addVars(e2)
+      case NumConst(_) ⇒ ()
+    }
+
+    def addVars(e: StringExpr): Unit = e match {
+      case StringVar(x) ⇒ strs += ι(x)
+      case Concat(e1, e2) ⇒
+        addVars(e1)
+        addVars(e2)
+      case Substring(s, n) ⇒
+        addVars(s)
+        addVars(n)
+      case ValueOf(n) ⇒ addVars(n)
+      case Trim(e) ⇒ addVars(e)
+      case ToLowerCase(e) ⇒ addVars(e)
+      case ToUpperCase(e) ⇒ addVars(e)
+      case Replace(e1, e2, e3) ⇒
+        addVars(e1)
+        addVars(e2)
+        addVars(e3)
+      case ReplaceAll(e1, e2, e3) ⇒
+        addVars(e1)
+        addVars(e2)
+        addVars(e3)
+      case ReplaceFirst(e1, e2, e3) ⇒
+        addVars(e1)
+        addVars(e2)
+        addVars(e3)
+      case StringConst(_) | NoStringExpr ⇒ ()
+    }
 }
 
 case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber[Num]](
-  i2s:Map[ID, Str]=Map[ID, Str](),
-  i2n:Map[ID, Num]=Map[ID, Num]())
+  var i2s:Map[ID, Str]=Map[ID, Str](),
+  var i2n:Map[ID, Num]=Map[ID, Num]())
   (
     implicit val strGen: AbstractStringFactory[Str],
     implicit val numGen: AbstractNumberFactory[Num]
   ) extends CompositeAbstractDomain[NonrelationalDomain[Str, Num]] {
   def construct(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
-    ???
+    // iterative narrowing to restore precision
+    val i2n = MMap[ID, Num]()
+    val i2s = MMap[ID, Str]()
+    // initialize all varialbes to be ⊤
+    val extractor = VariableExtractor()
+    extractor.addVars(pathCondition)
+    for ((s, i) ← stack.zipWithIndex) s match {
+      case NumValue(e) ⇒
+        extractor.addVars(e)
+        i2n += ι(i) → numGen.top
+      case StringValue(e) ⇒
+        extractor.addVars(e)
+        i2s += ι(i) → strGen.top
+    }
+    for (n ← extractor.nums) i2n += n → numGen.top
+    for (s ← extractor.strs) i2s += s → strGen.top
+    // iteratively apply all constraints until reaching a fixpoint
+    var stable = false
+    while (!stable) {
+      stable = true
+      for ((s, i) ← stack.zipWithIndex) s match {
+        case NumValue(e) ⇒
+          val snew = compute(e)
+          if (snew != i2n(StackID(i))) {
+            i2n(StackID(i)) = snew
+            stable = false
+          }
+        case StringValue(e) ⇒
+          val snew = compute(e)
+          if (snew != i2s(StackID(i))) {
+            i2s(StackID(i)) = snew
+            stable = false
+          }
+      }
+    }
+    this.i2n = i2n.toMap
+    this.i2s = i2s.toMap
   }
 
   def transit(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
