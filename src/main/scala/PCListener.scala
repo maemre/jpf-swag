@@ -103,7 +103,7 @@ object DisjunctiveConstraint {
 
 class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
 
-  val methodToAnalyze = "twoifs".toLowerCase
+  val methodToAnalyze = "foo".toLowerCase
   val PCs: MMap[String, MMap[Int, DisjunctiveConstraint]] = MMap()
   jpf.addPublisherExtension(classOf[ConsolePublisher], this)
 
@@ -129,7 +129,7 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
     Option(cg) foreach { cg ⇒
       val pc = cg.getCurrentPC.make_copy
       val constraint = Helpers.parsePC(pc)
-      println(s"CONSTRAINT: $constraint")
+      println(s"${insn.getPosition}: CONSTRAINT: $constraint")
       // val oldConstraint = getPC(insn)
       // val newConstraint = oldConstraint | pc.header
       // if (newConstraint ⊑ oldConstraint) {
@@ -147,10 +147,18 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
       return // skip
     }
     addCurrentPC(insn, thread)
-    val pc = new PathCondition()
-    pc.header = getPC(insn)
-    println(s"simplifying ${pc.header}")
-    println(pc.simplify())
+    val sf = thread.getTopFrame // stack frame
+    for (i ← 0 to sf.getTopPos) {
+      if (sf.isReferenceSlot(i)) {
+        println(s"${insn.getPosition}:\t$i → ${vm.getHeap.get(sf.getSlot(i))} ${vm.getHeap.get(sf.getSlot(i)).isStringObject}")
+      } else {
+        println(s"${insn.getPosition}:\t$i → ${sf.getSlot(i)}")
+      }
+    }
+//    val pc = new PathCondition()
+//    pc.header = getPC(insn)
+//    println(s"simplifying ${pc.header}")
+//    println(pc.simplify())
   }
 
   override def instructionExecuted(vm: VM, thread: ThreadInfo, next: Instruction, insn: Instruction): Unit = {
