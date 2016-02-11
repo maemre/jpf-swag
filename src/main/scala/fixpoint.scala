@@ -68,6 +68,7 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
               NumValue(NumConst(sf.getSlot(i)))
             }
           case e:string.StringExpression ⇒ StringValue(Helpers.parseStrExpr(e))
+          case e:string.SymbolicStringBuilder ⇒ StringValue(Option(e.getstr) map Helpers.parseStrExpr getOrElse NoStringExpr)
           case e:numeric.IntegerExpression ⇒ NumValue(Helpers.parseNumExpr(e))
         }
     val state: Domain = NonrelationalDomain[Prefix, TrivialNumber]()

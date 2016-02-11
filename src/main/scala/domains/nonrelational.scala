@@ -126,20 +126,28 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
     NonrelationalDomain(newi2s.toMap, newi2n.toMap)
   }
 
-  def compute(e: NumExpr): Num = {
-    ???
+  import NumBinop._
+
+  def compute(e: NumExpr): Num = e match {
+    case NumConst(n) ⇒ numGen.const(n.toInt)
+    case NumVar(x) ⇒ i2n.getOrElse(ι(x), numGen.bottom)
+    case NumBinopExpr(lhs, op, rhs) ⇒
+      val l = compute(lhs)
+      val r = compute(rhs)
+      op match {
+        case ⌜+⌝ ⇒ l + r
+        case ⌜-⌝ ⇒ l - r
+        case ⌜*⌝ ⇒ l * r
+        case ⌜/⌝ ⇒ l / r
+        case ⌜%⌝ ⇒ l % r
+      }
   }
 
   def compute(e: StringExpr): Str = e match {
     case StringConst(s) ⇒ strGen.const(s)
-    case StringVar(x) ⇒
-      val id = if (x.startsWith("stack_")) {
-        StackID(x.substring("stack_".length).toInt)
-      } else {
-        Name(x)
-      }
-      i2s.getOrElse(id, strGen.bottom)
+    case StringVar(x) ⇒ i2s.getOrElse(ι(x), strGen.bottom)
     case Concat(lhs, rhs) ⇒ compute(lhs) concat compute(rhs)
+    case NoStringExpr ⇒ strGen.bottom
   }
 
   def ⊔(that: NonrelationalDomain[Str, Num]) = {
