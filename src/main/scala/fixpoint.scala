@@ -37,7 +37,7 @@ object DummyConstraint extends numeric.Constraint(null, null, null) {
 class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
   type Domain = NonrelationalDomain[Prefix, TrivialNumber]
 
-  val methodToAnalyze = "twoifs".toLowerCase
+  val methodToAnalyze = "foo".toLowerCase
   val states = MMap[Int, Set[Domain]]()
   jpf.addPublisherExtension(classOf[ConsolePublisher], this)
 
@@ -62,8 +62,15 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
         sf.getSlotAttr(i) match {
           case null ⇒
             if (sf.isReferenceSlot(i)) {
-              // TODO: create an abstract domain for references for this case
-              NumValue(NumConst(sf.getSlot(i)))
+              // extract strings
+              val slot = sf.getSlot(i)
+              val obj = vm.getHeap.get(slot)
+              if (obj.isStringObject) {
+                StringValue(StringConst(obj.asString))
+              } else {
+                // TODO: create an abstract domain for references for this case
+                NumValue(NumConst(sf.getSlot(i)))
+              }
             } else {
               NumValue(NumConst(sf.getSlot(i)))
             }
@@ -97,12 +104,12 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
   override def publishFinished(publisher: Publisher): Unit = {
     val pw = publisher.getOut
 
-    publisher.publishTopicStart("Path conditions")
+    publisher.publishTopicStart("Abstract States")
 
     for (insn ← states.keys.toSeq.sorted) {
       // join all states that are seen so far
       val state = states(insn).reduce(_ ⊔ _)
-      pw.println(state)
+      pw.println(s"${insn}: $state")
     }
   }
 }
