@@ -94,3 +94,4 @@ case class NumVar(name: String) extends NumExpr
 case class NumConst(n: BigInt) extends NumExpr
 case class NumBinopExpr(lhs: NumExpr, op: NumBinop, rhs: NumExpr) extends NumExpr
 case class NumUnopExpr(op: NumUnop, num: NumExpr) extends NumExpr
+case object NoNumExpr extends NumExpr

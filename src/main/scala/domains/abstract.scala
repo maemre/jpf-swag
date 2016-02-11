@@ -15,6 +15,17 @@ trait AbstractDomain[T] {
 
 trait AbstractString[T] extends AbstractDomain[T] {
   def concat(s: T): T
+  def replace(m: T, r: T): T
+  def replaceAll(m: T, r: T): T
+  def replaceFirst(m: T, r: T): T
+  def trim: T
+  def substring(i: NumExpr): T
+  // generate a constraint describing length where length is named as `v`
+  def length(v: String): Constraint
+  def toLowerCase: T
+  def toUpperCase: T
+  def indexOf(c: CharExpr): NumExpr
+  def lastIndexOf(c: CharExpr): NumExpr
 }
 
 trait AbstractNumber[T] extends AbstractDomain[T] {
@@ -47,7 +58,7 @@ object AbstractBoolean {
 }
 
 trait CompositeAbstractDomain[T] {
-  def construct(pathCondition: Constraint, stack: IndexedSeq[StackValue]): Unit
+  def construct(pathCondition: Constraint, stack: IndexedSeq[StackValue]): T
 
   /**
     * Compute transition from this state to next state as described with
@@ -76,6 +87,7 @@ trait AbstractDomainFactory[T <: AbstractDomain[T]] {
 
 trait AbstractStringFactory[T <: AbstractString[T]] extends AbstractDomainFactory[T] {
   def const(s: String): T
+  def valueOf(n: NumExpr): T
 }
 
 trait AbstractNumberFactory[T <: AbstractNumber[T]] extends AbstractDomainFactory[T] {

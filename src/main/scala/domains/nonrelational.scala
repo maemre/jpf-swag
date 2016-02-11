@@ -37,7 +37,7 @@ case class VariableExtractor(val strs:MSet[ID]=MSet[ID](), val nums:MSet[ID]=MSe
       case NumBinopExpr(e1, _, e2) ⇒
         addVars(e1)
         addVars(e2)
-      case NumConst(_) ⇒ ()
+      case NumConst(_) | NoNumExpr ⇒ ()
     }
 
     def addVars(e: StringExpr): Unit = e match {
@@ -113,6 +113,8 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
     }
     this.i2n = i2n.toMap
     this.i2s = i2s.toMap
+
+    this
   }
 
   def transit(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
@@ -141,6 +143,12 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
         case ⌜/⌝ ⇒ l / r
         case ⌜%⌝ ⇒ l % r
       }
+    case IndexOf(s, c) ⇒ compute(compute(s).indexOf(c))
+    case LastIndexOf(s, c) ⇒ compute(compute(s).lastIndexOf(c))
+    case Length(s) ⇒
+      // TODO: gensym for length variable
+      NonrelationalDomain[Str, Num]().construct(compute(s).length("length"), IndexedSeq()).i2n(ι("length"))
+    case NoNumExpr ⇒ numGen.bottom
   }
 
   def compute(e: StringExpr): Str = e match {
@@ -148,6 +156,14 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
     case StringVar(x) ⇒ i2s.getOrElse(ι(x), strGen.bottom)
     case Concat(lhs, rhs) ⇒ compute(lhs) concat compute(rhs)
     case NoStringExpr ⇒ strGen.bottom
+    case Replace(s, m, r) ⇒ compute(s).replace(compute(m), compute(r))
+    case ReplaceAll(s, m, r) ⇒ compute(s).replaceAll(compute(m), compute(r))
+    case ReplaceFirst(s, m, r) ⇒ compute(s).replaceFirst(compute(m), compute(r))
+    case Substring(s, i) ⇒ compute(s).substring(i)
+    case ToLowerCase(s) ⇒ compute(s).toLowerCase
+    case ToUpperCase(s) ⇒ compute(s).toUpperCase
+    case Trim(s) ⇒ compute(s).trim
+    case ValueOf(n) ⇒ strGen.valueOf(n)
   }
 
   def ⊔(that: NonrelationalDomain[Str, Num]) = {
