@@ -25,9 +25,28 @@ object ConstraintSolver {
 
 case class ParseError(message: String) extends Exception(message)
 
+sealed trait ID
+case class Name(s: String) extends ID {
+  override def toString = s"sym_$s"
+}
+case class StackID(i: Int) extends ID {
+  override def toString = s"stack_$i"
+}
+
 object Helpers {
   import edu.ucsb.cs.jpf.swag.constraints._
   import gov.nasa.jpf.symbc.mixednumstrg
+
+  /**
+    * Find ID corresponding to the symbol.
+    */
+  def ι(x: String): ID = if (x.startsWith("stack_")) {
+    StackID(x.substring("stack_".length).toInt)
+  } else {
+    Name(x)
+  }
+
+  def ι(i: Int): ID = StackID(i)
 
   def parsePC(pc: numeric.PathCondition): Constraint = {
     val numericPart = Option(pc.header).map(parseNumeric _).toSet
