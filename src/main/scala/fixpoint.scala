@@ -81,7 +81,7 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
     } else {
       states(pos) = states(pos) + state
     }
-
+    println(s"$pos: $state")
     /**
     if (! states.contains(pos)) {
       states = states + (pos → state)
@@ -102,9 +102,7 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
     for (insn ← states.keys.toSeq.sorted) {
       // join all states that are seen so far
       val state = states(insn).reduce(_ ⊔ _)
-      // project to first value on stack
-      val constraint = state.projectTo(0)
-      pw.println(s"$insn:\t${constraint}")
+      pw.println(state)
     }
   }
 }

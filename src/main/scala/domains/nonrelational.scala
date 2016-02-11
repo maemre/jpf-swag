@@ -217,6 +217,16 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
 
   def projectOut(id: Int): NonrelationalDomain[Str, Num] = projectOut(StackID(id))
   def projectOut(name: String): NonrelationalDomain[Str, Num] = projectOut(Name(name))
-  
+
   def projectOut(id: ID): NonrelationalDomain[Str, Num] = NonrelationalDomain(i2s=i2s - id, i2n=i2n - id)
+
+  override def toString = {
+    val sb = new StringBuilder("NonrelationalDomain(\n")
+    for ((x, s) ← i2s)
+      sb ++= s"\t$x → $s\n"
+    for ((x, n) ← i2n)
+      sb ++= s"\t$x → $n\n"
+    sb ++= ")"
+    sb.toString
+  }
 }

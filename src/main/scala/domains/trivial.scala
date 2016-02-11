@@ -12,6 +12,8 @@ case class TrivialNumber(isTop: Boolean) extends AbstractNumber[TrivialNumber] {
   def ⊔(that: TrivialNumber) = copy(this.isTop || that.isTop)
   def ⊑(that: TrivialNumber) = !this.isTop || that.isTop
   def toConstraint(v: String) = True
+
+  override def toString = if (isTop) "⊤" else "⊥"
 }
 
 object ImplicitFactories {
