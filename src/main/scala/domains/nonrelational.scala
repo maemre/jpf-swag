@@ -110,11 +110,51 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
             stable = false
           }
       }
+      // process path condition
+      val (newi2n, newi2s) = narrowOnConstraint(i2n.toMap, i2s.toMap)(pathCondition)
+      if ((newi2n → newi2s) != (i2n → i2s)) // TODO: optimization: use a flag
+        stable = false
     }
     this.i2n = i2n.toMap
     this.i2s = i2s.toMap
 
     this
+  }
+
+  def narrowOnConstraint(i2n: Map[ID, Num], i2s: Map[ID, Str])(c: Constraint): (Map[ID, Num], Map[ID, Str]) = c match {
+    case Disjunction(cs) ⇒
+      cs map narrowOnConstraint(i2n, i2s) reduce { (t1, t2) ⇒
+        val i2n = for (i ← t1._1.keySet ++ t2._1.keySet) yield
+          (t1._1.get(i), t2._1.get(i)) match {
+            case (Some(s1), Some(s2)) => i -> (s1 ⊔ s2)
+            case (None, Some(s)) => i -> s
+            case (Some(s), None) => i -> s
+            case (None, None) ⇒ ??? // This should not happen due to the construction in for above
+          }
+        val i2s = for (i ← t1._2.keySet ++ t2._2.keySet) yield
+          (t1._2.get(i), t2._2.get(i)) match {
+            case (Some(s1), Some(s2)) => i -> (s1 ⊔ s2)
+            case (None, Some(s)) => i -> s
+            case (Some(s), None) => i -> s
+            case (None, None) ⇒ ??? // This should not happen due to the construction in for above
+          }
+        (i2n.toMap, i2s.toMap)
+      }
+    case Conjunction(cs) ⇒
+      cs.foldLeft((i2n, i2s))((t, c) ⇒ narrowOnConstraint(t._1, t._2)(c))
+    case NumericConstraint(NumVar(x), op, e) ⇒
+      op match {
+        case NumComparator.≡ ⇒
+          (i2n + (ι(x) → (compute(e))), i2s)
+        case _ ⇒ (i2n, i2s) // TODO: consider other cases
+      }
+    case StringConstraint(StringVar(x), op, e) ⇒
+      op match {
+        case StringComparator.⌜==⌝ | StringComparator.eq ⇒
+          (i2n, i2s + (ι(x) → (compute(e))))
+        case _ ⇒ (i2n, i2s) // TODO: consider other cases
+      }
+    case _ ⇒ (i2n, i2s) // TODO: add other constraints
   }
 
   def transit(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
