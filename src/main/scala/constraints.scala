@@ -45,7 +45,26 @@ import NumComparator.NumComparator
 case class StringConstraint(lhs: StringExpr, op: StringComparator, rhs: StringExpr) extends Constraint
 case class NumericConstraint(lhs: NumExpr, op: NumComparator, rhs: NumExpr) extends Constraint
 
-sealed trait StringExpr
+sealed trait StringExpr {
+  def ⌜==⌝(that: StringExpr) = StringConstraint(this, StringComparator.⌜==⌝, that)
+  def eq(that: StringExpr) = StringConstraint(this, StringComparator.eq, that)
+  def equalsIgnoreCase(that: StringExpr) = StringConstraint(this, StringComparator.equalsIgnoreCase, that)
+  def startsWith(that: StringExpr) = StringConstraint(this, StringComparator.startsWith, that)
+  def endsWith(that: StringExpr) = StringConstraint(this, StringComparator.endsWith, that)
+  def contains(that: StringExpr) = StringConstraint(this, StringComparator.contains, that)
+  def matches(that: StringExpr) = StringConstraint(this, StringComparator.matches, that)
+
+  def concat(that: StringExpr) = Concat(this, that)
+  def replace(m: StringExpr, r: StringExpr) = Replace(this, m, r)
+  def trim = Trim(this)
+  def toUpperCase = ToUpperCase(this)
+  def toLowerCase = ToLowerCase(this)
+  def charAt(i: NumExpr) = CharAt(this, i)
+  def length = Length(this)
+  def indexOf(c: CharExpr) = IndexOf(this, c)
+  def lastIndexOf(c: CharExpr) = LastIndexOf(this, c)
+}
+
 case class StringConst(s: String) extends StringExpr
 case class StringVar(name: String) extends StringExpr
 case class Concat(lhs: StringExpr, rhs: StringExpr) extends StringExpr
@@ -86,7 +105,17 @@ object NumUnop extends Enumeration {
 
 import NumUnop.NumUnop
 
-sealed trait NumExpr
+sealed trait NumExpr {
+  def +(that: NumExpr) = NumBinopExpr(this, NumBinop.⌜+⌝, that)
+  def -(that: NumExpr) = NumBinopExpr(this, NumBinop.⌜-⌝, that)
+  def *(that: NumExpr) = NumBinopExpr(this, NumBinop.⌜*⌝, that)
+  def /(that: NumExpr) = NumBinopExpr(this, NumBinop.⌜/⌝, that)
+  def %(that: NumExpr) = NumBinopExpr(this, NumBinop.⌜%⌝, that)
+
+  def unary_- = NumUnopExpr(NumUnop.negate, this)
+  def ++ = NumUnopExpr(NumUnop.increment, this)
+  def -- = NumUnopExpr(NumUnop.decrement, this)
+}
 case class Length(expr: StringExpr) extends NumExpr
 case class IndexOf(s: StringExpr, c: CharExpr) extends NumExpr
 case class LastIndexOf(s: StringExpr, c: CharExpr) extends NumExpr
