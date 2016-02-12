@@ -37,15 +37,18 @@ object DummyConstraint extends numeric.Constraint(null, null, null) {
 class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
   type Domain = NonrelationalDomain[Prefix, TrivialNumber]
 
-  val methodToAnalyze = "foo".toLowerCase
+  val methodToAnalyze = config.getString("fixpoint.method")
   val states = MMap[Int, Set[Domain]]()
+  val lineNumbers = MMap[Int, Int]()
   jpf.addPublisherExtension(classOf[ConsolePublisher], this)
 
   override def executeInstruction(vm: VM, thread: ThreadInfo, insn: Instruction): Unit = {
-    if (! insn.getMethodInfo.getLongName.toLowerCase.contains(methodToAnalyze)) {
+    if (! insn.getMethodInfo.getLongName.contains(methodToAnalyze)) {
       return // skip
     }
     val pos = insn.getPosition
+
+    lineNumbers += pos → insn.getLineNumber
 
     // get path condition
     val cg: numeric.PCChoiceGenerator = thread.getVM.getChoiceGenerator match {
@@ -109,7 +112,7 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
     for (insn ← states.keys.toSeq.sorted) {
       // join all states that are seen so far
       val state = states(insn).reduce(_ ⊔ _)
-      pw.println(s"${insn}: $state")
+      pw.println(s"${lineNumbers(insn)}: insn$insn: $state")
     }
   }
 }
