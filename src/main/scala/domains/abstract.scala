@@ -80,6 +80,29 @@ trait CompositeAbstractDomain[T] {
   def projectOut(name: String): T
 }
 
+trait RelationalString[T] extends AbstractDomain[T] {
+  def construct(constraints: Conjunction): T
+
+  def projectTo(id: ID): Option[Constraint]
+  
+  def projectOut(id: ID): T
+
+  // Get length constraint over a variable
+  // used for communicating length back-and-forward
+  def lengthConstraint(id: ID): T
+}
+
+trait RelationalNumber[T] extends AbstractDomain[T] {
+  def construct(constraints: Conjunction): T
+
+  def projectTo(id: ID): Option[Constraint]
+
+  def projectOut(id: ID): T
+
+  // add extra constraint
+  def addConstraint(c: Constraint): T
+}
+
 trait AbstractDomainFactory[T <: AbstractDomain[T]] {
   def bottom: T
   def top: T
