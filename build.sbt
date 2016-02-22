@@ -36,3 +36,5 @@ assemblyExcludedJars in assembly := {
     f.data.getName.startsWith("jpf-")
     }
 }
+
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"

@@ -10,5 +10,5 @@ cd box; make; sudo make install; cd ..
 cd octagons; make; sudo make install; cd ..
 cd newpolka; make; sudo make install; cd ..
 cd japron; make; sudo make install
-java -Djava.library.path=/usr/local/lib -ea -esa -Xcheck:jni gmp.Test
-java -Djava.library.path=/usr/local/lib -ea -esa -Xcheck:jni apron.Test
+java -Djava.library.path=. -Djava.library.path=/usr/local/lib -ea -esa -Xcheck:jni gmp.Test
+java -Djava.library.path=. -Djava.library.path=/usr/local/lib -ea -esa -Xcheck:jni apron.Test
