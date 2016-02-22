@@ -115,6 +115,12 @@ sealed trait NumExpr {
   def unary_- = NumUnopExpr(NumUnop.negate, this)
   def ++ = NumUnopExpr(NumUnop.increment, this)
   def -- = NumUnopExpr(NumUnop.decrement, this)
+
+  def <(that:NumExpr) = NumericConstraint(this, NumComparator.<, that)
+  def ≤(that:NumExpr) = NumericConstraint(this, NumComparator.≤, that)
+  def >(that:NumExpr) = NumericConstraint(this, NumComparator.>, that)
+  def ≥(that:NumExpr) = NumericConstraint(this, NumComparator.≥, that)
+  def ≡(that:NumExpr) = NumericConstraint(this, NumComparator.≡, that)
 }
 case class Length(expr: StringExpr) extends NumExpr
 case class IndexOf(s: StringExpr, c: CharExpr) extends NumExpr
