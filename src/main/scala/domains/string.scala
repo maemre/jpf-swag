@@ -141,3 +141,23 @@ case class PrefixS(s: String) extends Prefix {
 
   def toConstraint(v: String) = StringConstraint(StringVar(v), StringComparator.startsWith, StringConst(s))
 }
+
+case class LengthDomain[Num <: AbstractNumber[Num]](n: Num)(implicit val nGen: AbstractNumberFactory[Num]) extends AbstractString[LengthDomain[Num]] {
+  // Members declared in AbstractDomain
+  def ⊑(that: LengthDomain[Num]): Boolean = n ⊑ that.n
+  def ⊔(that: LengthDomain[Num]): LengthDomain[Num] = copy(n ⊔ that.n)
+  def toConstraint(v: String): Constraint = Conjunction(n.toConstraint(s"${v}_length"), NumericConstraint(Length(StringVar("v")), NumComparator.≡, NumVar(s"${v}_length")))
+  
+  // Members declared in AbstractString
+  def concat(s: LengthDomain[Num]): LengthDomain[Num] = copy(n + s.n)
+  def indexOf(c: CharExpr): NumExpr = ???
+  def lastIndexOf(c: CharExpr): NumExpr = ???
+  def length(v: String): Constraint = n.toConstraint(v)
+  def replace(m: LengthDomain[Num],r: LengthDomain[Num]): LengthDomain[Num] = ???
+  def replaceAll(m: LengthDomain[Num],r: LengthDomain[Num]): LengthDomain[Num] = ???
+  def replaceFirst(m: LengthDomain[Num],r: LengthDomain[Num]): LengthDomain[Num] = ???
+  def substring(i: NumExpr): LengthDomain[Num] = ???
+  def toLowerCase: LengthDomain[Num] = this
+  def toUpperCase: LengthDomain[Num] = this
+  def trim: LengthDomain[Num] = ???
+}
