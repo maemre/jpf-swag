@@ -27,8 +27,25 @@ case class SemirelationalDomain[Str <: RelationalString[Str], Num <: RelationalN
   }
 
   def transit(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
-    ???
+    // Symbols are from "PostHat and All That"
+    // γ^(a)
+    val oldState = addPrime(this.toConstraint)
+    // φ_τ
+    val transition = MSet[Constraint](addPrime(pathCondition))
+    for ((s, i) ← stack.zipWithIndex) s match {
+      case NumValue(e) ⇒
+        transition += addPrime(NumVar(StackID(i).toString) ≡ e)
+      case StringValue(e) ⇒
+        transition += addPrime(StringVar(StackID(i).toString) ≡ e)
+    }
+    val φ_τ = Conjunction(transition.toSet)
+    val primed = SemirelationalDomain[Str, Num](???, ???).construct(oldState & φ_τ, IndexedSeq())
+    ??? // primed.projectToPrimes.removePrime
   }
+
+  def addPrime(c: Constraint): Constraint = ???
+  def removePrime(c: Constraint): Constraint = ???
+  def projectToPrimes: SemirelationalDomain[Str, Num] = ???
 
   def ⊔(that: SemirelationalDomain[Str, Num]) = {
     // TODO: should we communicate the lengths?
@@ -52,6 +69,9 @@ case class SemirelationalDomain[Str <: RelationalString[Str], Num <: RelationalN
   def projectOut(name: String): SemirelationalDomain[Str, Num] = projectOut(Name(name))
 
   def projectOut(id: ID): SemirelationalDomain[Str, Num] = ???
+
+  // TODO: add constraint propagation (here maybe)
+  def toConstraint: Constraint = num.toConstraint & str.toConstraint
 
   override def toString = "SemirelationalDomain(\n$num\n$str)"
 }
