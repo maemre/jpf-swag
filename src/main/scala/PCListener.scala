@@ -87,14 +87,6 @@ case class DisjunctiveConstraint(val disjuncts: MSet[Constraint], val neg: Boole
     }
     if (neg) s"(not $core)" else core
   }
-
-  override def postToSolver(pb: ProblemGeneral) = pb match {
-    case z3:ProblemZ3 ⇒
-      val formula = z3.parseSMTLIB2String(prefix_notation, null, null, null, null)
-      z3.post(formula)
-      true
-    case _ ⇒ true // ???
-  }
 }
 
 object DisjunctiveConstraint {
