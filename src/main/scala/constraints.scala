@@ -16,16 +16,54 @@ case class ProperConstraint(left: numeric.Expression, comp: numeric.Comparator, 
   override def not = ???
 }
 
-sealed trait Constraint
-case class Not(c: Constraint) extends Constraint
-case class Disjunction(disjuncts: Set[Constraint]) extends Constraint
-case class Conjunction(conjuncts: Set[Constraint]) extends Constraint
+sealed trait Constraint {
+  /** Negation operator.
+   */
+  def unary_~ :Constraint = Not(this)
+
+  /** Conjunction operator.
+    */
+  def &(that: Constraint) = that match {
+    case Conjunction(conjuncts) ⇒ Conjunction(conjuncts + this)
+    case _ ⇒ Conjunction(this, that)
+  }
+
+  /** Disjunction operator.
+    */
+  def |(that: Constraint) = that match {
+    case Disjunction(disjuncts) ⇒ Disjunction(disjuncts + this)
+    case _ ⇒ Disjunction(this, that)
+  }
+}
+case class Not(c: Constraint) extends Constraint {
+  // use law of double negation for simplification
+  // I don't know whether this is valid with string constraints
+  override def unary_~ = c
+}
+case class Disjunction(disjuncts: Set[Constraint]) extends Constraint {
+  // Specialization to keep formula flatter
+  override def |(that:Constraint) = that match {
+    case Disjunction(dis) ⇒ Disjunction(disjuncts ++ dis)
+    case _ ⇒ Disjunction(disjuncts + that)
+  }
+}
+case class Conjunction(conjuncts: Set[Constraint]) extends Constraint {
+  // Specialization to keep formula flatter
+  override def &(that:Constraint) = that match {
+    case Conjunction(cons) ⇒ Conjunction(conjuncts ++ cons)
+    case _ ⇒ Conjunction(conjuncts + that)
+  }
+}
 case object True extends Constraint
 case object False extends Constraint
 case class BoolVar(x: String) extends Constraint
 
 object Conjunction {
   def apply(conjuncts: Constraint*): Conjunction = Conjunction(conjuncts.toSet)
+}
+
+object Disjunction {
+  def apply(disjuncts: Constraint*): Disjunction = Disjunction(disjuncts.toSet)
 }
 
 object StringComparator extends Enumeration {
@@ -47,6 +85,7 @@ case class NumericConstraint(lhs: NumExpr, op: NumComparator, rhs: NumExpr) exte
 
 sealed trait StringExpr {
   def ⌜==⌝(that: StringExpr) = StringConstraint(this, StringComparator.⌜==⌝, that)
+  def ≡(that: StringExpr) = this ⌜==⌝ that
   def eq(that: StringExpr) = StringConstraint(this, StringComparator.eq, that)
   def equalsIgnoreCase(that: StringExpr) = StringConstraint(this, StringComparator.equalsIgnoreCase, that)
   def startsWith(that: StringExpr) = StringConstraint(this, StringComparator.startsWith, that)
