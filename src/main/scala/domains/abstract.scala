@@ -1,6 +1,7 @@
 package edu.ucsb.cs.jpf.swag.domains
 
 import edu.ucsb.cs.jpf.swag.constraints._
+import edu.ucsb.cs.jpf.swag.helpers._
 
 sealed trait StackValue
 case class NumValue(e: NumExpr) extends StackValue
