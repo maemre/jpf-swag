@@ -12,16 +12,16 @@ import Helpers.ι
 // problem is getting from our constraints to
 // apron and back
 
-class ApronRelationalNumberDomain
-()
-extends RelationalNumber[ApronRelationalNumberDomain] {
-  def ⊔(that: ApronRelationalNumberDomain): ApronRelationalNumberDomain = {
+class RelationalNumberDomain
+(man: Manager)
+extends RelationalNumber[RelationalNumberDomain] {
+  def ⊔(that: RelationalNumberDomain): RelationalNumberDomain = {
     ???
   }
 
-  override def ∇(that: ApronRelationalNumberDomain) = this ⊔ that
+  override def ∇(that: RelationalNumberDomain) = this ⊔ that
 
-  def ⊑(that: ApronRelationalNumberDomain): Boolean = {
+  def ⊑(that: RelationalNumberDomain): Boolean = {
     ???
   }
 
@@ -33,15 +33,17 @@ extends RelationalNumber[ApronRelationalNumberDomain] {
     ???
   }
 
-  def projectOut(id: ID): ApronRelationalNumberDomain = {
+  def projectOut(id: ID): RelationalNumberDomain = {
     ???
   }
 
   // add extra constraint
-  def addConstraint(c: Constraint): ApronRelationalNumberDomain = {
+  def addConstraint(c: Constraint): RelationalNumberDomain = {
     ???
   }
 
   // Constraint representation of this abstract domain
   def toConstraint: Constraint = ???
+
+  def toConstraint(v: String): Constraint = ???
 }
