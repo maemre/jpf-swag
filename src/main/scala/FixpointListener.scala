@@ -31,7 +31,7 @@ object DummyConstraint extends numeric.Constraint(null, null, null) {
 
   def not = this
 
-  def postToSolver(pb: ProblemGeneral) = true
+  override def postToSolver(pb: ProblemGeneral) = true
 }
 
 class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {

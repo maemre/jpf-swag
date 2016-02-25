@@ -24,7 +24,10 @@ If your jpf directory structure is as following, then you are good.
 
 Otherwise, modify `base` and `baseDirectories` in definition of `unManagedJars` in `build.sbt` to point to JPF modules.
 
-### Compile and assembly jars
+Also, modify the unmanageJar for apron to point to your Apron jar.
+
+### Compile and assembly jars 
+Note: Important!!! (M.C. added): use when wanting to run jpf-core/bin/jpf (so it has the library, our new Scala listeners, to look in)
 
 Normally, we would be fine by just compiling our project with `compile` but JPF needs to be able to find Scala runtime and other possible future dependencies we might have. The current solution is to generate a fat jar that contains necessary dependencies using `assembly` command in `sbt-assembly` plugin, the SBT project is configured to install this plugin automatically. An example usage of `assembly` command is:
 

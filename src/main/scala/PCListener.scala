@@ -102,12 +102,16 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
   def getPC(insn: Instruction) = {
     val name = insn.getMethodInfo.getLongName
     val pos = insn.getPosition
+    //println("In getPC")
     if (PCs.get(name).isEmpty) {
+      //println(s"$insn is empty")
       PCs(name) = MMap()
     }
     if (PCs(name).get(pos).isEmpty) {
+      //println(s"$insn at $pos is empty")
       PCs(name)(pos) = DisjunctiveConstraint() // MSet() // new PathCondition()
     }
+    //println(s"Leaving getPC, returning ${PCs(name)(pos)} at $pos")
     PCs(name)(pos)
   }
 
@@ -140,11 +144,12 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
     }
     addCurrentPC(insn, thread)
     val sf = thread.getTopFrame // stack frame
+    //println("Executing instruction(s):")
     for (i ← 0 to sf.getTopPos) {
       if (sf.isReferenceSlot(i)) {
         println(s"${insn.getPosition}:\t$i → ${vm.getHeap.get(sf.getSlot(i))} ${vm.getHeap.get(sf.getSlot(i)).isStringObject}")
       } else {
-        println(s"${insn.getPosition}:\t$i → ${sf.getSlot(i)}")
+        println(s"Ins#${insn.getPosition}:\t StackItem#$i → ${sf.getSlot(i)}")
       }
     }
 //    val pc = new PathCondition()
@@ -157,8 +162,7 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
     if (! insn.getMethodInfo.getLongName.toLowerCase.contains(methodToAnalyze)) {
       return // skip
     }
-    print(s"${insn.getPosition}:\t")
-    println(getPC(insn))
+    println(s"Ins executed: ${insn.getPosition}:\t${getPC(insn)}")
   }
 
   override def publishFinished(publisher: Publisher): Unit = {

@@ -18,6 +18,7 @@ unmanagedJars in Compile ++= {
 }
 
 unmanagedJars in Compile += baseDirectory.value / "../jpf-symbc/lib/com.microsoft.z3.jar"
+unmanagedJars in Compile += baseDirectory.value / "../../apron/setup/japron/apron.jar"
 
 assemblyJarName in assembly := s"${name.value}.jar"
 
