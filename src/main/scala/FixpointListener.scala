@@ -21,19 +21,6 @@ import ImplicitFactories._
 import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 
-/**
-  * A dummy constraint object to force SPF check all branches?
-  */
-object DummyConstraint extends numeric.Constraint(null, null, null) {
-  def equals(c: numeric.Constraint) = c == DummyConstraint
-
-  def simplify: Boolean = true
-
-  def not = this
-
-  override def postToSolver(pb: ProblemGeneral) = true
-}
-
 class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
   type Domain = NonrelationalDomain[Prefix, TrivialNumber]
 
