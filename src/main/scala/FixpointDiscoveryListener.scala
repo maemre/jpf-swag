@@ -21,26 +21,13 @@ import ImplicitFactories._
 import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 
-class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
+class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
   type Domain = NonrelationalDomain[Prefix, TrivialNumber]
 
-  val wideningThreshold = 10
   val methodToAnalyze = config.getString("fixpoint.method")
-  val states = MMap[Int, Domain]()
-  val wideningCounts = MMap[Int, Int]()
+  val states = MMap[Int, Set[Domain]]()
   val lineNumbers = MMap[Int, Int]()
   jpf.addPublisherExtension(classOf[ConsolePublisher], this)
-
-  def joinOrWiden(currPos: Int, state1: Domain, state2: Domain): Domain = {
-    if (wideningCounts.getOrElseUpdate(currPos, 0) >= wideningThreshold) {
-      // no need to increase the counter since we already exceeded the
-      // widening threshold
-      state1 ∇ state2
-    } else {
-      wideningCounts(currPos) = wideningCounts(currPos) + 1
-      state1 ⊔ state2
-    }
-  }
 
   override def executeInstruction(vm: VM, thread: ThreadInfo, insn: Instruction): Unit = {
     if (! insn.getMethodInfo.getLongName.contains(methodToAnalyze)) {
@@ -84,15 +71,24 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
     val state: Domain = NonrelationalDomain[Prefix, TrivialNumber]()
     state.construct(pathCondition, stack)
 
+    // Alternative strategy:
+    // Collect all states, then merge paths later on
     if (! states.contains(pos)) {
-      states(pos) = state
-    } else if (state ⊑ states(pos)) {
-      thread.setTerminated()
+      states(pos) = Set(state)
     } else {
-      states(pos) = joinOrWiden(pos, states(pos), state)
+      states(pos) = states(pos) + state
+    }
+    println(s"$pos: $state")
+    /**
+    if (! states.contains(pos)) {
+      states = states + (pos → state)
+    } else if (state ⊑ states(pos)) {
+      thread.skipInstruction(insn.getNext)
+    } else {
+      states = states + (pos → (states(pos) ⊔ state))
       // TODO: update stack acc. to state
     }
-    
+      */
   }
 
   override def publishFinished(publisher: Publisher): Unit = {
@@ -102,7 +98,8 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
 
     for (insn ← states.keys.toSeq.sorted) {
       // join all states that are seen so far
-      pw.println(s"${lineNumbers(insn)}: insn$insn: ${states(insn)}")
+      val state = states(insn).reduce(_ ⊔ _)
+      pw.println(s"${lineNumbers(insn)}: insn$insn: $state")
     }
   }
 }
