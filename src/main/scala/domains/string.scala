@@ -6,12 +6,12 @@ import cs260.lwnn.abstracted.domains.widenedstrings
 
 object ImplicitShim {
   implicit object PrefixFactory extends AbstractStringFactory[Prefix] {
-    val top = PrefixS("")
-    val bottom = NoString
+    val ⊤ = PrefixS("")
+    val ⊥ = NoString
     def const(s: String) = ConstS(s)
     def valueOf(n: NumExpr) = n match {
       case NumConst(n) ⇒ const(n.toString)
-      case _ ⇒ top
+      case _ ⇒ ⊤
     }
   }
 }
@@ -90,7 +90,7 @@ case class ConstS(s: String) extends Prefix {
   def replaceFirst(m: Prefix, r: Prefix) = ???
   def substring(i: NumExpr) = i match {
     case NumConst(i) ⇒ if (i <= s.length) ConstS(s.substring(i.toInt)) else NoString
-    case _ ⇒ PrefixFactory.top
+    case _ ⇒ PrefixFactory.⊤
   }
 
   def toLowerCase = copy(s.toLowerCase)
@@ -127,7 +127,7 @@ case class PrefixS(s: String) extends Prefix {
 
   def substring(i: NumExpr) = i match {
     case NumConst(i) ⇒ if (i <= s.length) PrefixS(s.substring(i.toInt)) else PrefixS("")
-    case _ ⇒ PrefixFactory.top
+    case _ ⇒ PrefixFactory.⊤
   }
 
   def toLowerCase = copy(s.toLowerCase)

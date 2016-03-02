@@ -13,14 +13,16 @@ case class TrivialNumber(isTop: Boolean) extends AbstractNumber[TrivialNumber] {
   def ⊑(that: TrivialNumber) = !this.isTop || that.isTop
   def toConstraint(v: String) = True
 
+  def addConstraint(cmp: NumComparator.NumComparator, rhs: TrivialNumber) = copy(this.isTop && rhs.isTop)
+
   override def toString = if (isTop) "⊤" else "⊥"
 }
 
 object ImplicitFactories {
   implicit object TrivialNumberFactory extends AbstractNumberFactory[TrivialNumber] {
-    val top = TrivialNumber(true)
-    val bottom = TrivialNumber(false)
-    def const(n: Int) = top
+    val ⊤ = TrivialNumber(true)
+    val ⊥ = TrivialNumber(false)
+    def const(n: Int) = ⊤
   }
 }
 

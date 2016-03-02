@@ -111,8 +111,8 @@ trait RelationalNumber[T] extends AbstractDomain[T] {
 }
 
 trait AbstractDomainFactory[T <: AbstractDomain[T]] {
-  def bottom: T
-  def top: T
+  def ⊥ : T
+  def ⊤ : T
 }
 
 trait AbstractStringFactory[T <: AbstractString[T]] extends AbstractDomainFactory[T] {
@@ -125,6 +125,6 @@ trait AbstractNumberFactory[T <: AbstractNumber[T]] extends AbstractDomainFactor
 }
 
 trait CompositeAbstractDomainFactory[T <: CompositeAbstractDomain[T]] {
-  def bottom: T
-  def top: T
+  def ⊥ : T
+  def ⊤ : T
 }
