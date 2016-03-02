@@ -1,8 +1,8 @@
 package edu.ucsb.cs.jpf.swag.domains
 
 import edu.ucsb.cs.jpf.swag.constraints._
-
 import scala.annotation.tailrec
+import scala.language.postfixOps
 
 import scala.collection.mutable.{Map ⇒ MMap, Set ⇒ MSet, StringBuilder}
 
@@ -77,21 +77,21 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
   ) extends CompositeAbstractDomain[NonrelationalDomain[Str, Num]] {
   def construct(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
     // iterative narrowing to restore precision
-    val i2n = MMap[ID, Num]()
-    val i2s = MMap[ID, Str]()
+    var i2n = MMap[ID, Num]()
+    var i2s = MMap[ID, Str]()
     // initialize all varialbes to be ⊤
     val extractor = VariableExtractor()
     extractor.addVars(pathCondition)
     for ((s, i) ← stack.zipWithIndex) s match {
       case NumValue(e) ⇒
         extractor.addVars(e)
-        i2n += ι(i) → numGen.top
+        i2n += ι(i) → numGen.⊤
       case StringValue(e) ⇒
         extractor.addVars(e)
-        i2s += ι(i) → strGen.top
+        i2s += ι(i) → strGen.⊤
     }
-    for (n ← extractor.nums) i2n += n → numGen.top
-    for (s ← extractor.strs) i2s += s → strGen.top
+    for (n ← extractor.nums) i2n += n → numGen.⊤
+    for (s ← extractor.strs) i2s += s → strGen.⊤
     // iteratively apply all constraints until reaching a fixpoint
     var stable = false
     while (!stable) {
@@ -99,26 +99,41 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
       for ((s, i) ← stack.zipWithIndex) s match {
         case NumValue(e) ⇒
           val snew = compute(e)
-          if (snew != i2n(StackID(i))) {
-            i2n(StackID(i)) = snew
+          if (snew != i2n(ι(i))) {
+            i2n(ι(i)) = snew
             stable = false
           }
         case StringValue(e) ⇒
           val snew = compute(e)
-          if (snew != i2s(StackID(i))) {
-            i2s(StackID(i)) = snew
+          if (snew != i2s(ι(i))) {
+            i2s(ι(i)) = snew
             stable = false
           }
       }
       // process path condition
       val (newi2n, newi2s) = narrowOnConstraint(i2n.toMap, i2s.toMap)(pathCondition)
-      if ((newi2n → newi2s) != (i2n → i2s)) // TODO: optimization: use a flag
+      if ((newi2n → newi2s) != (i2n → i2s)) { // TODO: optimization: use a flag
         stable = false
+        // TODO: optimize this replacement, maybe switch to MMap-only or Map-only
+        i2n ++= newi2n
+        i2s ++= newi2s
+      }
+
+      this.i2n = i2n.toMap
+      this.i2s = i2s.toMap
     }
     this.i2n = i2n.toMap
     this.i2s = i2s.toMap
 
     this
+  }
+
+  def enumerateVars(c: NumericConstraint): Seq[NumericConstraint] = c match {
+    case NumericConstraint(v:NumVar, op, e) ⇒ Seq(c)
+    case NumericConstraint(NumBinopExpr(e1, NumBinop.⌜+⌝, e2), op, rhs) ⇒
+      enumerateVars(NumericConstraint(e1, op, rhs - e2)) ++
+      enumerateVars(NumericConstraint(e2, op, rhs - e1))
+    case _ ⇒ Seq()
   }
 
   def narrowOnConstraint(i2n: Map[ID, Num], i2s: Map[ID, Str])(c: Constraint): (Map[ID, Num], Map[ID, Str]) = c match {
@@ -143,10 +158,13 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
     case Conjunction(cs) ⇒
       cs.foldLeft((i2n, i2s))((t, c) ⇒ narrowOnConstraint(t._1, t._2)(c))
     case NumericConstraint(NumVar(x), op, e) ⇒
-      op match {
-        case NumComparator.≡ ⇒
-          (i2n + (ι(x) → (compute(e))), i2s)
-        case _ ⇒ (i2n, i2s) // TODO: consider other cases
+      val newi2n = i2n + (ι(x) → i2n(ι(x)).addConstraint(op, compute(e)))
+      (newi2n, i2s)
+      // TODO: add more clever stuff on numeric constraints
+    case c@NumericConstraint(e1, op, e2) ⇒
+      // heuristics to extract different types of inequalities on single vars
+      enumerateVars(c).foldLeft((i2n, i2s)) { (maps, c) ⇒
+        narrowOnConstraint(maps._1, maps._2)(c)
       }
     case StringConstraint(StringVar(x), op, e) ⇒
       op match {
@@ -172,7 +190,8 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
 
   def compute(e: NumExpr): Num = e match {
     case NumConst(n) ⇒ numGen.const(n.toInt)
-    case NumVar(x) ⇒ i2n.getOrElse(ι(x), numGen.bottom)
+    case NumVar(x) ⇒
+      i2n.getOrElse(ι(x), numGen.⊤)
     case NumBinopExpr(lhs, op, rhs) ⇒
       val l = compute(lhs)
       val r = compute(rhs)
@@ -188,14 +207,14 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
     case Length(s) ⇒
       // TODO: gensym for length variable
       NonrelationalDomain[Str, Num]().construct(compute(s).length("length"), IndexedSeq()).i2n(ι("length"))
-    case NoNumExpr ⇒ numGen.bottom
+    case NoNumExpr ⇒ numGen.⊥
   }
 
   def compute(e: StringExpr): Str = e match {
     case StringConst(s) ⇒ strGen.const(s)
-    case StringVar(x) ⇒ i2s.getOrElse(ι(x), strGen.bottom)
+    case StringVar(x) ⇒ i2s.getOrElse(ι(x), strGen.⊥)
     case Concat(lhs, rhs) ⇒ compute(lhs) concat compute(rhs)
-    case NoStringExpr ⇒ strGen.bottom
+    case NoStringExpr ⇒ strGen.⊥
     case Replace(s, m, r) ⇒ compute(s).replace(compute(m), compute(r))
     case ReplaceAll(s, m, r) ⇒ compute(s).replaceAll(compute(m), compute(r))
     case ReplaceFirst(s, m, r) ⇒ compute(s).replaceFirst(compute(m), compute(r))
@@ -285,4 +304,8 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
     sb ++= ")"
     sb.toString
   }
+
+  def toConstraint = Conjunction((i2n ++ i2s) map {
+    case (id, v) ⇒ v.toConstraint(id.toString)
+  } toSet)
 }
