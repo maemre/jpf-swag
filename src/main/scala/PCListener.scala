@@ -10,7 +10,7 @@ import gov.nasa.jpf.symbc.numeric._
 import scala.collection.mutable.{Map => MMap, Set => MSet}
 import gov.nasa.jpf.jvm.bytecode.{IfInstruction, GOTO, JVMReturnInstruction}
 import gov.nasa.jpf.symbc.numeric.solvers.{ProblemGeneral, ProblemZ3}
-
+import edu.ucsb.cs.jpf.swag.constraints
 import edu.ucsb.cs.jpf.swag.helpers._
 
 import scala.annotation.tailrec
@@ -81,7 +81,7 @@ case class DisjunctiveConstraint(val disjuncts: MSet[Constraint], val neg: Boole
   override def prefix_notation: String = {
     // TODO: add conjunctions
     val core = if (disjuncts.isEmpty) {
-      "false"
+      "true"
     } else {
       "(or " + disjuncts.map(_.prefix_notation).mkString(" ") + ")"
     }
@@ -95,8 +95,8 @@ object DisjunctiveConstraint {
 
 class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
 
-  val methodToAnalyze = "foo".toLowerCase
-  val PCs: MMap[String, MMap[Int, DisjunctiveConstraint]] = MMap()
+  val methodToAnalyze = config.getString("fixpoint.method")
+  val PCs: MMap[String, MMap[Int, MSet[constraints.Constraint]]] = MMap()
   jpf.addPublisherExtension(classOf[ConsolePublisher], this)
 
   def getPC(insn: Instruction) = {
@@ -109,7 +109,7 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
     }
     if (PCs(name).get(pos).isEmpty) {
       //println(s"$insn at $pos is empty")
-      PCs(name)(pos) = DisjunctiveConstraint() // MSet() // new PathCondition()
+      PCs(name)(pos) = MSet()
     }
     //println(s"Leaving getPC, returning ${PCs(name)(pos)} at $pos")
     PCs(name)(pos)
@@ -121,11 +121,12 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
       case cg => cg.getPreviousChoiceGeneratorOfType(classOf[PCChoiceGenerator])
     }
 
-    val pc = getPC(insn) // call for side-effect
+    val pcs = getPC(insn) // call for side-effect
     Option(cg) foreach { cg ⇒
       val pc = cg.getCurrentPC.make_copy
       val constraint = Helpers.parsePC(pc)
       println(s"${insn.getPosition}: CONSTRAINT: $constraint")
+      pcs += constraint
       // val oldConstraint = getPC(insn)
       // val newConstraint = oldConstraint | pc.header
       // if (newConstraint ⊑ oldConstraint) {
@@ -174,7 +175,8 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
       if (mname.toLowerCase.contains(methodToAnalyze)) {
         pw.println(s"Path conditions for ${mname}")
         for (insn <- pcs.keys.toSeq.sorted) {
-          pw.println(s"$insn:\t${pcs(insn).prefix_notation}")
+          val ors = pcs(insn).map(_.toString).mkString(" ")
+          pw.println(s"$insn:\t(or $ors)")
         }
       }
     }
