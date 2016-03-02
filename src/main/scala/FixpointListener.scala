@@ -22,7 +22,8 @@ import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 
 class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
-  type Domain = NonrelationalDomain[Prefix, TrivialNumber]
+  type Domain = NonrelationalDomain[Prefix, AbstractInterval]
+  implicit val intervalFactory = Interval
 
   val wideningThreshold = 10
   val methodToAnalyze = config.getString("fixpoint.method")
@@ -81,13 +82,16 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
           case e:string.SymbolicStringBuilder ⇒ StringValue(Option(e.getstr) map Helpers.parseStrExpr getOrElse NoStringExpr)
           case e:numeric.IntegerExpression ⇒ NumValue(Helpers.parseNumExpr(e))
         }
-    val state: Domain = NonrelationalDomain[Prefix, TrivialNumber]()
+    val state: Domain = NonrelationalDomain[Prefix, AbstractInterval]()
     state.construct(pathCondition, stack)
 
+    // println(s"$pos: Stack\t$stack")
+    // println(s"$pos: PC\t$pathCondition")
+    // println(s"$pos: State\t${state.i2n}")
     if (! states.contains(pos)) {
       states(pos) = state
     } else if (state ⊑ states(pos)) {
-      thread.setTerminated()
+      // thread.setTerminated()
     } else {
       states(pos) = joinOrWiden(pos, states(pos), state)
       // TODO: update stack acc. to state
