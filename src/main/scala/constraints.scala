@@ -76,12 +76,25 @@ import StringComparator.StringComparator
 object NumComparator extends Enumeration {
   type NumComparator = Value
   val ≡, ≠, <, ≤, >, ≥ = Value
+
+  def toString(n: NumComparator): String = n match {
+    case ≡ ⇒ "≡"
+    case ≠ ⇒ "≠"
+    case < ⇒ "<"
+    case ≤ ⇒ "≤"
+    case > ⇒ ">"
+    case ≥ ⇒ "≥"
+  }
 }
 
 import NumComparator.NumComparator
 
-case class StringConstraint(lhs: StringExpr, op: StringComparator, rhs: StringExpr) extends Constraint
-case class NumericConstraint(lhs: NumExpr, op: NumComparator, rhs: NumExpr) extends Constraint
+case class StringConstraint(lhs: StringExpr, op: StringComparator, rhs: StringExpr) extends Constraint {
+    override def toString = s"($op $lhs $rhs)"
+}
+case class NumericConstraint(lhs: NumExpr, op: NumComparator, rhs: NumExpr) extends Constraint {
+  override def toString = s"${NumComparator.toString(op)} $lhs $rhs"
+}
 
 sealed trait StringExpr {
   def ⌜==⌝(that: StringExpr) = StringConstraint(this, StringComparator.⌜==⌝, that)
