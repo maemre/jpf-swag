@@ -35,6 +35,8 @@ trait AbstractNumber[T] extends AbstractDomain[T] {
   def *(that: T): T
   def /(that: T): T
   def %(that: T): T
+
+  def addConstraint(cmp:NumComparator.NumComparator, rhs:T): T
 }
 
 case class AbstractBoolean(b: Set[Boolean]) extends AbstractDomain[AbstractBoolean] {
@@ -79,6 +81,8 @@ trait CompositeAbstractDomain[T] {
 
   def projectOut(stackIdx: Int): T
   def projectOut(name: String): T
+
+  def toConstraint: Constraint
 }
 
 trait RelationalString[T] extends AbstractDomain[T] {
