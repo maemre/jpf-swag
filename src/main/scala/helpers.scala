@@ -69,7 +69,18 @@ object Helpers {
         case numeric.Comparator.GE ⇒ NumComparator.≥
       }
       NumericConstraint(lhs, op, rhs)
-    case x ⇒ throw ParseError(s"Constraint $x has unknown type")
+    case c: numeric.NonLinearIntegerConstraint ⇒
+      val lhs = parseNumExpr(c.getLeft)
+      val rhs = parseNumExpr(c.getRight)
+      val op = c.getComparator match {
+        case numeric.Comparator.EQ ⇒ NumComparator.≡
+        case numeric.Comparator.NE ⇒ NumComparator.≠
+        case numeric.Comparator.LT ⇒ NumComparator.<
+        case numeric.Comparator.LE ⇒ NumComparator.≤
+        case numeric.Comparator.GT ⇒ NumComparator.>
+        case numeric.Comparator.GE ⇒ NumComparator.≥
+      }
+      NumericConstraint(lhs, op, rhs)
   }
 
   def parseString(c: string.StringConstraint): Constraint = {
