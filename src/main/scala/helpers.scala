@@ -27,7 +27,7 @@ case class ParseError(message: String) extends Exception(message)
 
 sealed trait ID
 case class Name(s: String) extends ID {
-  override def toString = s"sym_$s"
+  override def toString = s"$s"
 }
 case class StackID(i: Int) extends ID {
   override def toString = s"stack_$i"
@@ -43,7 +43,7 @@ object Helpers {
   def ι(x: String): ID = if (x.startsWith("stack_")) {
     StackID(x.substring("stack_".length).toInt)
   } else {
-    Name(x)
+    Name(x) // x.substring("sym_".length))
   }
 
   def ι(i: Int): ID = StackID(i)
