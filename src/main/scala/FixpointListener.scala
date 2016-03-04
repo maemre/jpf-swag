@@ -25,7 +25,7 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
   type Domain = NonrelationalDomain[Prefix, AbstractInterval]
   implicit val intervalFactory = Interval
 
-  val wideningThreshold = 10
+  val wideningThreshold = Option(config.getString("fixpoint.widening_threshold")).getOrElse("1").toInt
   val methodToAnalyze = config.getString("fixpoint.method")
   val states = MMap[Int, Domain]()
   val wideningCounts = MMap[Int, Int]()
@@ -43,7 +43,7 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
     }
   }
 
-  override def executeInstruction(vm: VM, thread: ThreadInfo, insn: Instruction): Unit = {
+  override def instructionExecuted(vm: VM, thread: ThreadInfo, next: Instruction, insn: Instruction): Unit = {
     if (! insn.getMethodInfo.getLongName.contains(methodToAnalyze)) {
       return // skip
     }
@@ -88,10 +88,13 @@ class FixpointListener(config: Config, jpf: JPF) extends PropertyListenerAdapter
     // println(s"$pos: Stack\t$stack")
     // println(s"$pos: PC\t$pathCondition")
     // println(s"$pos: State\t${state.i2n}")
+    println(s"insn $pos $pathCondition")
     if (! states.contains(pos)) {
       states(pos) = state
     } else if (state ⊑ states(pos)) {
-      // thread.setTerminated()
+      println(s"$pos: Convergence is done.")
+      println(s"${Console.MAGENTA}$state${Console.RESET}\n⊑\n${Console.GREEN}${states(pos)}${Console.RESET}\n")
+      thread.setTerminated()
     } else {
       states(pos) = joinOrWiden(pos, states(pos), state)
       // TODO: update stack acc. to state
