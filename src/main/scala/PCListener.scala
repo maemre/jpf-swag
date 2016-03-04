@@ -49,9 +49,6 @@ case class DisjunctiveConstraint(val disjuncts: MSet[Constraint], val neg: Boole
       this |= c
     case _ ⇒
       if (c != null) {
-        println(s"adding $c to $disjuncts")
-        println(c.getLeft)
-        println(c.getClass)
         disjuncts += c
       }
       this
@@ -146,13 +143,13 @@ class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with 
     addCurrentPC(insn, thread)
     val sf = thread.getTopFrame // stack frame
     //println("Executing instruction(s):")
-    for (i ← 0 to sf.getTopPos) {
-      if (sf.isReferenceSlot(i)) {
-        println(s"${insn.getPosition}:\t$i → ${vm.getHeap.get(sf.getSlot(i))} ${vm.getHeap.get(sf.getSlot(i)).isStringObject}")
-      } else {
-        println(s"Ins#${insn.getPosition}:\t StackItem#$i → ${sf.getSlot(i)}")
-      }
-    }
+    // for (i ← 0 to sf.getTopPos) {
+    //   if (sf.isReferenceSlot(i)) {
+    //     println(s"${insn.getPosition}:\t$i → ${vm.getHeap.get(sf.getSlot(i))} ${vm.getHeap.get(sf.getSlot(i)).isStringObject}")
+    //   } else {
+    //     println(s"Ins#${insn.getPosition}:\t StackItem#$i → ${sf.getSlot(i)}")
+    //   }
+    // }
 //    val pc = new PathCondition()
 //    pc.header = getPC(insn)
 //    println(s"simplifying ${pc.header}")
