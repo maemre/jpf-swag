@@ -153,7 +153,7 @@ case class Interval(lower: Option[Int], upper: Option[Int]) extends AbstractInte
             case (Some(u), None)    ⇒ u
             case (None, Some(v))    ⇒ v
           }
-          copy(upper=f lift (lower → that.lower))
+          copy(lower=f lift (lower → that.lower))
         case NumComparator.< ⇒
           val f: PartialFunction[(Option[Int], Option[Int]), Int] = {
             case (Some(u), Some(v)) ⇒ u min v-1
@@ -167,8 +167,25 @@ case class Interval(lower: Option[Int], upper: Option[Int]) extends AbstractInte
             case (Some(u), None)    ⇒ u
             case (None, Some(v))    ⇒ v
           }
-          copy(upper=f lift (lower → that.lower))
+          copy(lower=f lift (lower → that.lower))
       }
+  }
+
+  override def ∇(that: AbstractInterval) = that match {
+    case that:Interval ⇒ {
+      val l = for (
+        l1 ← lower;
+        l2 ← that.lower;
+        if l1 <= l2) yield l1
+      
+      val u = for (
+        u1 ← upper;
+        u2 ← that.upper;
+        if u1 >= u2) yield u1
+
+      Interval(l, u)
+    }
+    case BottomInterval ⇒ this
   }
 }
 
