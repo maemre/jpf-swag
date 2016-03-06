@@ -112,15 +112,13 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
       }
       // process path condition
       val (newi2n, newi2s) = narrowOnConstraint(i2n.toMap, i2s.toMap)(pathCondition)
-      if ((newi2n → newi2s) != (i2n → i2s)) { // TODO: optimization: use a flag
+      if ((newi2n → newi2s) != (this.i2n → this.i2s)) { // TODO: optimization: use a flag
         stable = false
-        // TODO: optimize this replacement, maybe switch to MMap-only or Map-only
-        i2n ++= newi2n
-        i2s ++= newi2s
+        println(s"old: $this\n${Console.GREEN}new:${(newi2n, newi2s)}${Console.RESET}")
       }
-
-      this.i2n = i2n.toMap
-      this.i2s = i2s.toMap
+        // TODO: optimize this replacement, maybe switch to MMap
+      this.i2n = newi2n
+      this.i2s = newi2s
     }
     this.i2n = i2n.toMap
     this.i2s = i2s.toMap
@@ -131,8 +129,12 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
   def enumerateVars(c: NumericConstraint): Seq[NumericConstraint] = c match {
     case NumericConstraint(v:NumVar, op, e) ⇒ Seq(c)
     case NumericConstraint(NumBinopExpr(e1, NumBinop.⌜+⌝, e2), op, rhs) ⇒
-      enumerateVars(NumericConstraint(e1, op, rhs - e2)) ++
+      val e = enumerateVars(NumericConstraint(e1, op, rhs - e2)) ++
       enumerateVars(NumericConstraint(e2, op, rhs - e1))
+      if (e.nonEmpty) {
+        //println(s"${Console.RED} enumerated vars: ${Console.RESET} $e FROM $c")
+      }
+      e
     case _ ⇒ Seq()
   }
 
@@ -157,8 +159,9 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
       }
     case Conjunction(cs) ⇒
       cs.foldLeft((i2n, i2s))((t, c) ⇒ narrowOnConstraint(t._1, t._2)(c))
-    case NumericConstraint(NumVar(x), op, e) ⇒
+    case c@NumericConstraint(NumVar(x), op, e) ⇒
       val newi2n = i2n + (ι(x) → i2n(ι(x)).addConstraint(op, compute(e)))
+      //println(Console.YELLOW + s"Simple constraint ${Console.CYAN}$c${Console.RESET} rhs: ${Console.GREEN}${compute(e)}" + Console.RESET)
       (newi2n, i2s)
       // TODO: add more clever stuff on numeric constraints
     case c@NumericConstraint(e1, op, e2) ⇒
