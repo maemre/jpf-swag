@@ -10,85 +10,9 @@ import gov.nasa.jpf.symbc.numeric._
 import scala.collection.mutable.{Map => MMap, Set => MSet}
 import gov.nasa.jpf.jvm.bytecode.{IfInstruction, GOTO, JVMReturnInstruction}
 import gov.nasa.jpf.symbc.numeric.solvers.{ProblemGeneral, ProblemZ3}
-import edu.ucsb.cs.jpf.swag.constraints
 import edu.ucsb.cs.jpf.swag.helpers._
 
 import scala.annotation.tailrec
-
-case class ProperConstraint(left: Expression, comp: Comparator, right: Expression) extends Constraint(left, comp, right) {
-
-  def eqchk[A](l:A, r:A) = if (l == null) r == null else l.equals(r)
-
-  override def equals(o: Any): Boolean = o match {
-    case that:Constraint ⇒
-      println(s"------------------ $this == $that")
-      eqchk(left, that.getLeft) && eqchk(comp, that.getComparator) && eqchk(right, that.getRight)
-    case _ ⇒ false
-  }
-
-  override def not = ???
-}
-
-object ProperConstraint {
-  def apply(c: Constraint): ProperConstraint = ProperConstraint(c.getLeft, c.getComparator, c.getRight)
-}
-
-case class DisjunctiveConstraint(val disjuncts: MSet[Constraint], val neg: Boolean = false) extends Constraint(null, null, null) {
-  override def toString = if (disjuncts.isEmpty) "⊥" else disjuncts.mkString(" ∨ ")
-
-  def not: DisjunctiveConstraint = /*{
-    val result = disjuncts.map(_.not) reduceOption { (a: Constraint, b: Constraint) ⇒
-      a.and = b
-      a
-    }
-    result.getOrElse(null) // TODO: should return true
-  }*/ copy(neg= !neg) // this might not play well with MSet[Constraint]
-
-  def |=(c: Constraint): DisjunctiveConstraint = c match {
-    case c: DisjunctiveConstraint ⇒
-      this |= c
-    case _ ⇒
-      if (c != null) {
-        disjuncts += c
-      }
-      this
-  }
-
-  def |(c: Constraint): DisjunctiveConstraint = {
-    DisjunctiveConstraint() |= this |= c
-  }
-
-  def |=(c: DisjunctiveConstraint): DisjunctiveConstraint = {
-    disjuncts ++= c.disjuncts
-    this
-  }
-
-  def ⊑(that: DisjunctiveConstraint): Boolean = {
-    // to check validity of (that ⇒ this) = (¬ that ∨ this), we will
-    // check satisfiability of its negation: that ∧ ¬ this
-
-    // TODO: simplify with conjunction-like stuff
-    // println(this.prefix_notation)
-    false
-    // TODO: give the whole condition at once?
-    //val composite = Seq(this.not, that).map((c:Constraint) ⇒ ConstraintSolver.parseSMTLIB2String(s"(assert ${c.prefix_notation})"))
-    //! ConstraintSolver.solveConstraints(composite)
-  }
-
-  override def prefix_notation: String = {
-    // TODO: add conjunctions
-    val core = if (disjuncts.isEmpty) {
-      "true"
-    } else {
-      "(or " + disjuncts.map(_.prefix_notation).mkString(" ") + ")"
-    }
-    if (neg) s"(not $core)" else core
-  }
-}
-
-object DisjunctiveConstraint {
-  def apply(): DisjunctiveConstraint = DisjunctiveConstraint(MSet())
-}
 
 class PCListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
 
