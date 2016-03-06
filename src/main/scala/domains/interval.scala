@@ -139,37 +139,41 @@ case class Interval(lower: Option[Int], upper: Option[Int]) extends AbstractInte
     case that:Interval ⇒
       cmp match {
         case NumComparator.≡ ⇒ this ⊓ that
-        case NumComparator.≠ ⇒ ???
+        case NumComparator.≠ ⇒ 
+          // approximate by using the fact x ≠ y ⇔ x < y ∨ x > y
+          addConstraint(NumComparator.<, that) ⊔ addConstraint(NumComparator.>, that)
         case NumComparator.≤ ⇒
           val f: PartialFunction[(Option[Int], Option[Int]), Int] = {
             case (Some(u), Some(v)) ⇒ u min v
             case (Some(u), None)    ⇒ u
             case (None, Some(v))    ⇒ v
           }
-          copy(upper=f lift (upper → that.upper))
+          copy(upper=f lift (upper → that.upper)).checkForBottom
         case NumComparator.≥ ⇒
           val f: PartialFunction[(Option[Int], Option[Int]), Int] = {
             case (Some(u), Some(v)) ⇒ u max v
             case (Some(u), None)    ⇒ u
             case (None, Some(v))    ⇒ v
           }
-          copy(lower=f lift (lower → that.lower))
+          copy(lower=f lift (lower → that.lower)).checkForBottom
         case NumComparator.< ⇒
           val f: PartialFunction[(Option[Int], Option[Int]), Int] = {
-            case (Some(u), Some(v)) ⇒ u min v-1
+            case (Some(u), Some(v)) ⇒ u min (v-1)
             case (Some(u), None)    ⇒ u
             case (None, Some(v))    ⇒ v
           }
-          copy(upper=f lift (upper → that.upper))
+          copy(upper=f lift (upper → that.upper)).checkForBottom
         case NumComparator.> ⇒
           val f: PartialFunction[(Option[Int], Option[Int]), Int] = {
-            case (Some(u), Some(v)) ⇒ u max v+1
+            case (Some(u), Some(v)) ⇒ u max (v+1)
             case (Some(u), None)    ⇒ u
             case (None, Some(v))    ⇒ v
           }
-          copy(lower=f lift (lower → that.lower))
+          copy(lower=f lift (lower → that.lower)).checkForBottom
       }
   }
+
+  def checkForBottom: AbstractInterval = lower.flatMap(l ⇒ upper.map(u ⇒ if (u < l) BottomInterval else this)).getOrElse(this)
 
   override def ∇(that: AbstractInterval) = that match {
     case that:Interval ⇒ {
