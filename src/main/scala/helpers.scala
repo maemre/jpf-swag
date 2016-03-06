@@ -84,7 +84,39 @@ object Helpers {
   }
 
   def parseString(c: string.StringConstraint): Constraint = {
-    ???
+    import string.StringComparator._
+
+    val lhs = parseStrExpr(c.getLeft)
+    val rhs = parseStrExpr(c.getRight)
+    c.getComparator match {
+      case EQ ⇒
+        lhs ≡ rhs // TODO: should we change with referential equality?
+      case NE ⇒
+        Not(lhs ≡ rhs)
+      case EQUALS ⇒
+        lhs ≡ rhs
+      case EQUALSIGNORECASE ⇒
+        lhs equalsIgnoreCase rhs
+      case NOTEQUALSIGNORECASE ⇒
+        Not(lhs equalsIgnoreCase rhs)
+      case STARTSWITH ⇒
+        lhs startsWith rhs
+      case NOTSTARTSWITH ⇒
+        Not(lhs startsWith rhs)
+      case ENDSWITH ⇒
+        lhs endsWith rhs
+      case NOTENDSWITH ⇒
+        Not(lhs endsWith rhs)
+      case CONTAINS ⇒
+        lhs contains rhs
+      case NOTCONTAINS ⇒
+        Not(lhs contains rhs)
+      case MATCHES ⇒
+        lhs matches rhs
+      case NOMATCHES ⇒
+        Not(lhs matches rhs)
+      case cmp ⇒ throw new MatchError(s"Conversion of comparator $cmp from SPF is not defined.")
+    }
   }
 
   def parseNumOp(op: numeric.Operator): NumBinop.NumBinop = op match {
