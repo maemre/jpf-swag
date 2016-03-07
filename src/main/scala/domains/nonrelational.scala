@@ -33,7 +33,6 @@ case class VariableExtractor(val strs:MSet[ID]=MSet[ID](), val nums:MSet[ID]=MSe
       case Length(e) ⇒ addVars(e)
       case IndexOf(e, _) ⇒ addVars(e)
       case LastIndexOf(e, _) ⇒ addVars(e)
-      case NumUnopExpr(_, e) ⇒ addVars(e)
       case NumBinopExpr(e1, _, e2) ⇒
         addVars(e1)
         addVars(e2)

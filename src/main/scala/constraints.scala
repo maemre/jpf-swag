@@ -325,13 +325,6 @@ object NumBinop extends Enumeration {
 
 import NumBinop._
 
-object NumUnop extends Enumeration {
-  type NumUnop = Value
-  val negate, increment, decrement = Value
-}
-
-import NumUnop._
-
 sealed trait NumExpr {
   def +(that: NumExpr) = NumBinopExpr(this, NumBinop.⌜+⌝, that)
   def -(that: NumExpr) = NumBinopExpr(this, NumBinop.⌜-⌝, that)
@@ -339,9 +332,9 @@ sealed trait NumExpr {
   def /(that: NumExpr) = NumBinopExpr(this, NumBinop.⌜/⌝, that)
   def %(that: NumExpr) = NumBinopExpr(this, NumBinop.⌜%⌝, that)
 
-  def unary_- = NumUnopExpr(NumUnop.negate, this)
-  def ++ = NumUnopExpr(NumUnop.increment, this)
-  def -- = NumUnopExpr(NumUnop.decrement, this)
+  def unary_- = NumBinopExpr(NumConst(0), NumBinop.⌜-⌝, this)
+  def ++ = NumBinopExpr(this, NumBinop.⌜+⌝, NumConst(1))
+  def -- = NumBinopExpr(this, NumBinop.⌜-⌝, NumConst(1))
 
   def <(that:NumExpr) = NumericConstraint(this, NumComparator.<, that)
   def ≤(that:NumExpr) = NumericConstraint(this, NumComparator.≤, that)
@@ -397,16 +390,7 @@ case class NumBinopExpr(lhs: NumExpr, op: NumBinop, rhs: NumExpr) extends NumExp
   def addPrime = copy(lhs.addPrime, op, rhs.addPrime)
   def removePrime = copy(lhs.removePrime, op, rhs.removePrime)
 }
-case class NumUnopExpr(op: NumUnop, num: NumExpr) extends NumExpr {
-  def toSPFExpr = op match {
-    case NumUnop.negate ⇒ num.toSPFExpr._neg
-    case NumUnop.increment ⇒ num.toSPFExpr._plus(1)
-    case NumUnop.decrement ⇒ num.toSPFExpr._plus(-1)
-  }
 
-  def addPrime = copy(op, num.addPrime)
-  def removePrime = copy(op, num.removePrime)
-}
 case object NoNumExpr extends NumExpr {
   def toSPFExpr = ???
 
