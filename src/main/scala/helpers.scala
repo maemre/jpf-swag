@@ -189,5 +189,9 @@ object Helpers {
       name
     }
 
-  def addPrime(name: String) = "'" + name
+  def addPrime(name: String) =
+    if (name.matches("'*stack_\\d+"))
+      "'" + name
+  else
+    name
 }
