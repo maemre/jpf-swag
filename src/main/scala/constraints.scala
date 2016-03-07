@@ -163,7 +163,28 @@ import NumComparator._
 case class StringConstraint(lhs: StringExpr, op: StringComparator, rhs: StringExpr) extends Constraint {
   override def toString = s"($op $lhs $rhs)"
 
-  def toSPFConstraint = ???
+  def toSPFConstraint = {
+
+    val left = Option(lhs).map(_.toSPFExpr).orNull
+    val right = Option(rhs).map(_.toSPFExpr).orNull
+    val cmp = op match {
+      case StringComparator.⌜==⌝ ⇒ string.StringComparator.EQ
+      case StringComparator.eq ⇒ string.StringComparator.EQUALS
+      case StringComparator.equalsIgnoreCase ⇒ string.StringComparator.EQUALSIGNORECASE
+      case StringComparator.startsWith ⇒ string.StringComparator.STARTSWITH
+      case StringComparator.endsWith ⇒ string.StringComparator.ENDSWITH
+      case StringComparator.contains ⇒ string.StringComparator.CONTAINS
+      case StringComparator.isInteger ⇒ string.StringComparator.ISINTEGER
+      case StringComparator.isLong ⇒ string.StringComparator.ISINTEGER
+      case StringComparator.isDouble ⇒ string.StringComparator.ISDOUBLE
+      case StringComparator.isBoolean ⇒ string.StringComparator.ISBOOLEAN
+      case StringComparator.empty ⇒ string.StringComparator.EMPTY
+      case StringComparator.matches ⇒ string.StringComparator.MATCHES
+      case StringComparator.regionMatches ⇒ string.StringComparator.REGIONMATCHES
+    }
+
+    (None, Some(new string.StringConstraint(left, cmp, right)))
+  }
 
   def addPrime = copy(lhs.addPrime, op, rhs.addPrime)
   def removePrime = copy(lhs.removePrime, op, rhs.removePrime)
@@ -217,7 +238,7 @@ sealed trait StringExpr {
   def indexOf(c: CharExpr) = IndexOf(this, c)
   def lastIndexOf(c: CharExpr) = LastIndexOf(this, c)
 
-  def toSPFExpr: string.StringExpression = ???
+  def toSPFExpr: string.StringExpression
 
   def addPrime: StringExpr
   def removePrime: StringExpr
@@ -226,50 +247,62 @@ sealed trait StringExpr {
 case class StringConst(s: String) extends StringExpr {
   def addPrime = this
   def removePrime = this
+  def toSPFExpr = new string.StringConstant(s)
 }
 case class StringVar(name: String) extends StringExpr{
   def addPrime = StringVar(Helpers.addPrime(name))
   def removePrime = StringVar(Helpers.removePrime(name))
+  def toSPFExpr = new string.StringSymbolic(name)
 }
 case class Concat(lhs: StringExpr, rhs: StringExpr) extends StringExpr {
   def addPrime = copy(lhs.addPrime, rhs.addPrime)
   def removePrime = copy(lhs.addPrime, rhs.addPrime)
+  def toSPFExpr = lhs.toSPFExpr _concat rhs.toSPFExpr
 }
 case class Replace(source: StringExpr, matchS: StringExpr, replaceWith: StringExpr) extends StringExpr {
   def addPrime = copy(source.addPrime, matchS.addPrime, replaceWith.addPrime)
   def removePrime = copy(source.removePrime, matchS.removePrime, replaceWith.removePrime)
+  def toSPFExpr = source.toSPFExpr._replace(matchS.toSPFExpr, replaceWith.toSPFExpr)
 }
 case class ReplaceFirst(source: StringExpr, matchS: StringExpr, replaceWith: StringExpr) extends StringExpr {
   def addPrime = copy(source.addPrime, matchS.addPrime, replaceWith.addPrime)
   def removePrime = copy(source.removePrime, matchS.removePrime, replaceWith.removePrime)
+  def toSPFExpr = source.toSPFExpr._replaceFirst(matchS.toSPFExpr, replaceWith.toSPFExpr)
 }
 case class ReplaceAll(source: StringExpr, matchS: StringExpr, replaceWith: StringExpr) extends StringExpr {
   def addPrime = copy(source.addPrime, matchS.addPrime, replaceWith.addPrime)
   def removePrime = copy(source.removePrime, matchS.removePrime, replaceWith.removePrime)
+  def toSPFExpr = source.toSPFExpr._replace(matchS.toSPFExpr, replaceWith.toSPFExpr)
 }
 case class Trim(str: StringExpr) extends StringExpr {
   def addPrime = copy(str.addPrime)
   def removePrime = copy(str.removePrime)
+  def toSPFExpr = str.toSPFExpr._trim
 }
 case class Substring(str: StringExpr, idx: NumExpr) extends StringExpr {
   def addPrime = copy(str.addPrime, idx.addPrime)
   def removePrime = copy(str.removePrime, idx.removePrime)
+  def toSPFExpr = str.toSPFExpr._subString(idx.toSPFExpr)
 }
 case class ValueOf(n: NumExpr) extends StringExpr {
   def addPrime = copy(n.addPrime)
   def removePrime = copy(n.removePrime)
+  def toSPFExpr = string.StringExpression._valueOf(n.toSPFExpr)
 }
 case class ToUpperCase(str: StringExpr) extends StringExpr {
   def addPrime = copy(str.addPrime)
   def removePrime = copy(str.removePrime)
+  def toSPFExpr = ??? // new string.DerivedStringExpression(string.StringOperator.TOUPPERCASE, str.toSPFExpr)
 }
 case class ToLowerCase(str: StringExpr) extends StringExpr {
   def addPrime = copy(str.addPrime)
   def removePrime = copy(str.removePrime)
+  def toSPFExpr = ???
 }
 case object NoStringExpr extends StringExpr {
   def addPrime = this
   def removePrime = this
+  def toSPFExpr = ??? // should return a bottom string
 }
 
 sealed trait CharExpr
