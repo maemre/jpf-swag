@@ -55,32 +55,39 @@ object Helpers {
     Conjunction(numericPart ++ stringPart)
   }
 
-  def parseNumeric(c: numeric.Constraint): Constraint = c match {
-    case c: numeric.LogicalORLinearIntegerConstraints ⇒ Disjunction(iterableAsScalaIterable(c.getList).map(parseNumeric _).toSet)
-    case c: numeric.LinearIntegerConstraint ⇒
-      val lhs = parseNumExpr(c.getLeft)
-      val rhs = parseNumExpr(c.getRight)
-      val op = c.getComparator match {
-        case numeric.Comparator.EQ ⇒ NumComparator.≡
-        case numeric.Comparator.NE ⇒ NumComparator.≠
-        case numeric.Comparator.LT ⇒ NumComparator.<
-        case numeric.Comparator.LE ⇒ NumComparator.≤
-        case numeric.Comparator.GT ⇒ NumComparator.>
-        case numeric.Comparator.GE ⇒ NumComparator.≥
-      }
-      NumericConstraint(lhs, op, rhs)
-    case c: numeric.NonLinearIntegerConstraint ⇒
-      val lhs = parseNumExpr(c.getLeft)
-      val rhs = parseNumExpr(c.getRight)
-      val op = c.getComparator match {
-        case numeric.Comparator.EQ ⇒ NumComparator.≡
-        case numeric.Comparator.NE ⇒ NumComparator.≠
-        case numeric.Comparator.LT ⇒ NumComparator.<
-        case numeric.Comparator.LE ⇒ NumComparator.≤
-        case numeric.Comparator.GT ⇒ NumComparator.>
-        case numeric.Comparator.GE ⇒ NumComparator.≥
-      }
-      NumericConstraint(lhs, op, rhs)
+  def parseNumeric(c: numeric.Constraint): Constraint = {
+    val c1 = c match {
+      case c: numeric.LogicalORLinearIntegerConstraints ⇒ Disjunction(iterableAsScalaIterable(c.getList).map(parseNumeric _).toSet)
+      case c: numeric.LinearIntegerConstraint ⇒
+        val lhs = parseNumExpr(c.getLeft)
+        val rhs = parseNumExpr(c.getRight)
+        val op = c.getComparator match {
+          case numeric.Comparator.EQ ⇒ NumComparator.≡
+          case numeric.Comparator.NE ⇒ NumComparator.≠
+          case numeric.Comparator.LT ⇒ NumComparator.<
+          case numeric.Comparator.LE ⇒ NumComparator.≤
+          case numeric.Comparator.GT ⇒ NumComparator.>
+          case numeric.Comparator.GE ⇒ NumComparator.≥
+        }
+        NumericConstraint(lhs, op, rhs)
+      case c: numeric.NonLinearIntegerConstraint ⇒
+        val lhs = parseNumExpr(c.getLeft)
+        val rhs = parseNumExpr(c.getRight)
+        val op = c.getComparator match {
+          case numeric.Comparator.EQ ⇒ NumComparator.≡
+          case numeric.Comparator.NE ⇒ NumComparator.≠
+          case numeric.Comparator.LT ⇒ NumComparator.<
+          case numeric.Comparator.LE ⇒ NumComparator.≤
+          case numeric.Comparator.GT ⇒ NumComparator.>
+          case numeric.Comparator.GE ⇒ NumComparator.≥
+        }
+        NumericConstraint(lhs, op, rhs)
+    }
+
+    if (c.and == null)
+      c1
+    else
+      c1 & parseNumeric(c.and)
   }
 
   def parseString(c: string.StringConstraint): Constraint = {
@@ -88,7 +95,7 @@ object Helpers {
 
     val lhs = parseStrExpr(c.getLeft)
     val rhs = parseStrExpr(c.getRight)
-    c.getComparator match {
+    val c1 = c.getComparator match {
       case EQ ⇒
         lhs ≡ rhs // TODO: should we change with referential equality?
       case NE ⇒
@@ -117,6 +124,11 @@ object Helpers {
         Not(lhs matches rhs)
       case cmp ⇒ throw new MatchError(s"Conversion of comparator $cmp from SPF is not defined.")
     }
+
+    if (c.and == null)
+      c1
+    else
+      c1 & parseString(c.and)
   }
 
   def parseNumOp(op: numeric.Operator): NumBinop.NumBinop = op match {
