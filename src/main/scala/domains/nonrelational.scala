@@ -92,6 +92,8 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
     }
     for (n ← extractor.nums) i2n += n → numGen.⊤
     for (s ← extractor.strs) i2s += s → strGen.⊤
+    this.i2n = i2n.toMap
+    this.i2s = i2s.toMap
     // iteratively apply all constraints until reaching a fixpoint
     var stable = false
     while (!stable) {
@@ -99,29 +101,31 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
       for ((s, i) ← stack.zipWithIndex) s match {
         case NumValue(e) ⇒
           val snew = compute(e)
-          if (snew != i2n(ι(i))) {
-            i2n(ι(i)) = snew
+          if (snew != this.i2n(ι(i))) {
+            println(s"$snew ≠ ${i2n(ι(i))})")
+            this.i2n = this.i2n + (ι(i) → snew)
             stable = false
           }
         case StringValue(e) ⇒
           val snew = compute(e)
-          if (snew != i2s(ι(i))) {
-            i2s(ι(i)) = snew
+          if (snew != this.i2s(ι(i))) {
+            println(s"$snew ≠ ${i2s(ι(i))})")
+            this.i2s = this.i2s + (ι(i) → snew)
             stable = false
           }
       }
       // process path condition
-      val (newi2n, newi2s) = narrowOnConstraint(i2n.toMap, i2s.toMap)(pathCondition)
+      val (newi2n, newi2s) = narrowOnConstraint(this.i2n, this.i2s)(pathCondition)
       if ((newi2n → newi2s) != (this.i2n → this.i2s)) { // TODO: optimization: use a flag
         stable = false
-        println(s"old: $this\n${Console.GREEN}new:${(newi2n, newi2s)}${Console.RESET}")
       }
-        // TODO: optimize this replacement, maybe switch to MMap
+
+      println(s"old:${(this.i2n, this.i2s)}\n${Console.GREEN}new:${(newi2n, newi2s)}${Console.RESET}")
+
+      // TODO: optimize this replacement, maybe switch to MMap
       this.i2n = newi2n
       this.i2s = newi2s
     }
-    this.i2n = i2n.toMap
-    this.i2s = i2s.toMap
 
     this
   }
