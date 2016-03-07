@@ -73,5 +73,18 @@ case class SemirelationalDomain[Str <: RelationalString[Str], Num <: RelationalN
   // TODO: add constraint propagation (here maybe)
   def toConstraint: Constraint = num.toConstraint & str.toConstraint
 
-  override def toString = "SemirelationalDomain(\n$num\n$str)"
+  override def toString = s"SemirelationalDomain(\n$num\n$str)"
+
+  def getVars = ???
+}
+
+/**
+  * Wrapper class to integrate nonrelational string domains into semirelational
+  * string domains.
+  */
+class SemirelationalStringWrapper[Str <: AbstractString[Str]](
+  implicit val strFactory: AbstractStringFactory[Str]) {
+  val i2s: Map[ID, Str] = Map()
+
+  ???
 }

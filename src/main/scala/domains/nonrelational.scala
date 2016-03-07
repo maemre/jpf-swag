@@ -314,4 +314,6 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
   def toConstraint = Conjunction((i2n ++ i2s) map {
     case (id, v) ⇒ v.toConstraint(id.toString)
   } toSet)
+
+  def getVars = i2n.keySet ++ i2s.keySet
 }

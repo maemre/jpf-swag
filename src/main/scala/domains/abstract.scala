@@ -62,6 +62,8 @@ trait CompositeAbstractDomain[T] {
   def projectOut(name: String): T
 
   def toConstraint: Constraint
+
+  def getVars: Set[ID]
 }
 
 trait RelationalString[T] extends AbstractDomain[T] {
