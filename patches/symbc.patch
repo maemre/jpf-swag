@@ -1,0 +1,46 @@
+diff --git a/src/main/gov/nasa/jpf/symbc/mixednumstrg/SpecialIntegerExpression.java b/src/main/gov/nasa/jpf/symbc/mixednumstrg/SpecialIntegerExpression.java
+--- a/src/main/gov/nasa/jpf/symbc/mixednumstrg/SpecialIntegerExpression.java
++++ b/src/main/gov/nasa/jpf/symbc/mixednumstrg/SpecialIntegerExpression.java
+@@ -62,7 +62,7 @@ import gov.nasa.jpf.symbc.string.StringE
+ 
+ public class SpecialIntegerExpression extends IntegerExpression {
+ 
+-	SpecialOperator op;
++	public SpecialOperator op;
+ 	public StringExpression opr;
+ 
+   public SpecialIntegerExpression(StringExpression opr1){
+@@ -111,4 +111,4 @@ public class SpecialIntegerExpression ex
+ 				return getClass().getCanonicalName().compareTo(expr.getClass().getCanonicalName());
+ 			}
+ 		}
+-}
+\ No newline at end of file
++}
+diff --git a/src/main/gov/nasa/jpf/symbc/numeric/LinearIntegerExpression.java b/src/main/gov/nasa/jpf/symbc/numeric/LinearIntegerExpression.java
+--- a/src/main/gov/nasa/jpf/symbc/numeric/LinearIntegerExpression.java
++++ b/src/main/gov/nasa/jpf/symbc/numeric/LinearIntegerExpression.java
+@@ -38,7 +38,7 @@
+ package gov.nasa.jpf.symbc.numeric;
+ import static gov.nasa.jpf.symbc.numeric.Operator.*;
+ 
+-abstract class LinearIntegerExpression extends IntegerExpression
++public abstract class LinearIntegerExpression extends IntegerExpression
+ {
+ 
+    public IntegerExpression _minus_reverse (long i)
+diff --git a/src/main/gov/nasa/jpf/symbc/string/StringConstraint.java b/src/main/gov/nasa/jpf/symbc/string/StringConstraint.java
+--- a/src/main/gov/nasa/jpf/symbc/string/StringConstraint.java
++++ b/src/main/gov/nasa/jpf/symbc/string/StringConstraint.java
+@@ -64,9 +64,9 @@ public class StringConstraint {
+ 
+   StringExpression right;
+ 
+-  StringConstraint and;
++  public StringConstraint and;
+ 
+-  StringConstraint(StringExpression l, StringComparator c, StringExpression r) {
++  public StringConstraint(StringExpression l, StringComparator c, StringExpression r) {
+     left = l;
+     comp = c;
+     right = r;
