@@ -25,7 +25,7 @@ case class VariableExtractor(val strs:MSet[ID]=MSet[ID](), val nums:MSet[ID]=MSe
       case StringConstraint(lhs, _, rhs) ⇒
         addVars(lhs)
         addVars(rhs)
-      case BoolVar(_) | True | False ⇒ ()
+      case True | False ⇒ ()
     }
 
     def addVars(e: NumExpr): Unit = e match {

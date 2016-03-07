@@ -128,12 +128,6 @@ case object False extends Constraint {
   val addPrime = False
   val removePrime = False
 }
-case class BoolVar(x: String) extends Constraint {
-  def toSPFConstraint = ???
-
-  def addPrime = BoolVar(Helpers.addPrime(x))
-  def removePrime = BoolVar(Helpers.removePrime(x))
-}
 
 object Conjunction {
   def apply(conjuncts: Constraint*): Conjunction = Conjunction(conjuncts.toSet)

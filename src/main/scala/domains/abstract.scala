@@ -39,27 +39,6 @@ trait AbstractNumber[T] extends AbstractDomain[T] {
   def addConstraint(cmp:NumComparator.NumComparator, rhs:T): T
 }
 
-case class AbstractBoolean(b: Set[Boolean]) extends AbstractDomain[AbstractBoolean] {
-  def toConstraint(v: String) =
-    if (b == Set(true))
-      True
-    else if (b == Set(false))
-      False
-    else if (b == Set())
-      Conjunction()
-    else
-      BoolVar(v)
-
-  def ⊔(that: AbstractBoolean) = AbstractBoolean(this.b ++ that.b)
-  def ⊑(that: AbstractBoolean) = this.b subsetOf that.b
-}
-
-object AbstractBoolean {
-  def apply(b: Boolean*): AbstractBoolean = AbstractBoolean(b.toSet)
-  def top = AbstractBoolean(true, false)
-  def bot = AbstractBoolean()
-}
-
 trait CompositeAbstractDomain[T] {
   def construct(pathCondition: Constraint, stack: IndexedSeq[StackValue]): T
 
