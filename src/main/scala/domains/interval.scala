@@ -126,11 +126,25 @@ case class Interval(lower: Option[Int], upper: Option[Int]) extends AbstractInte
       case (Some(lower), None) ⇒
         x ≥ NumConst(lower)
       case (None, None) ⇒
-        True // TODO: we need to describe that ∃x somehow.
+        True // TODO: we need to describe that ∃x somehow
     }
   }
 
-  def ⊓(that: Interval) = ???
+  def ⊓(that: Interval) = {
+    val l = (lower, that.lower) match {
+      case (Some(a), Some(b)) ⇒ Some(a max b)
+      case (Some(a), None) ⇒ Some(a)
+      case (None, Some(a)) ⇒ Some(a)
+      case (None, None) ⇒ None
+    }
+    val u = (upper, that.upper)  match {
+      case (Some(a), Some(b)) ⇒ Some(a min b)
+      case (Some(a), None) ⇒ Some(a)
+      case (None, Some(a)) ⇒ Some(a)
+      case (None, None) ⇒ None
+    }
+    Interval(l, u).checkForBottom
+  }
 
   // add extra constraint
   def addConstraint(cmp: NumComparator.NumComparator, rhs: AbstractInterval) = rhs match {
