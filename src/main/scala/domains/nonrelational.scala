@@ -169,7 +169,7 @@ case class NonrelationalDomain[Str <: AbstractString[Str], Num <: AbstractNumber
       // TODO: add more clever stuff on numeric constraints
     case c@NumericConstraint(e1, op, e2) ⇒
       // heuristics to extract different types of inequalities on single vars
-      enumerateVars(c).foldLeft((i2n, i2s)) { (maps, c) ⇒
+      (enumerateVars(c) ++ enumerateVars(NumericConstraint(- e2, op, - e1))).foldLeft((i2n, i2s)) { (maps, c) ⇒
         narrowOnConstraint(maps._1, maps._2)(c)
       }
     case StringConstraint(StringVar(x), op, e) ⇒
