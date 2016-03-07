@@ -5,21 +5,6 @@ import gov.nasa.jpf.symbc.string
 import gov.nasa.jpf.symbc.mixednumstrg
 import edu.ucsb.cs.jpf.swag.helpers.Helpers
 
-
-case class ProperConstraint(left: numeric.Expression, comp: numeric.Comparator, right: numeric.Expression) extends numeric.Constraint(left, comp, right) {
-
-  def eqchk[A](l:A, r:A) = if (l == null) r == null else l.equals(r)
-
-  override def equals(o: Any): Boolean = o match {
-    case that:numeric.Constraint ⇒
-      println(s"------------------ $this == $that")
-      eqchk(left, that.getLeft) && eqchk(comp, that.getComparator) && eqchk(right, that.getRight)
-    case _ ⇒ false
-  }
-
-  override def not = ???
-}
-
 sealed trait Constraint {
   /** Negation operator.
    */
