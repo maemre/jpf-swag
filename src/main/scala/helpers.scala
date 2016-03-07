@@ -168,4 +168,14 @@ object Helpers {
         case _ ⇒ throw new UnsupportedOperationException(s"Unsupported string operation: ${e.op}")
       }
   }
+
+  def removePrime(name: String) =
+    if (name.head == '\'') {
+      name.tail
+    }
+    else {
+      name
+    }
+
+  def addPrime(name: String) = "'" + name
 }
