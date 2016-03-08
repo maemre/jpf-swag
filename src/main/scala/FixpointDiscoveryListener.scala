@@ -22,12 +22,29 @@ import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 
 class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
-  type Domain = NonrelationalDomain[Prefix, TrivialNumber]
+  type Domain = NonrelationalDomain[Prefix, AbstractInterval]
+  type IP = Int // (Int, Int)
+  implicit val intervalFactory = Interval
+  implicit val regexFactory = RegexDomain
 
+  val wideningThreshold = Option(config.getString("fixpoint.widening_threshold")).getOrElse("1").toInt
   val methodToAnalyze = config.getString("fixpoint.method")
-  val states = MMap[Int, Set[Domain]]()
+  val states = MMap[IP, Set[Domain]]()
+  val wideningCounts = MMap[IP, Int]()
   val lineNumbers = MMap[Int, Int]()
   jpf.addPublisherExtension(classOf[ConsolePublisher], this)
+
+  def joinOrWiden(currPos: IP)(state1: Domain, state2: Domain): Domain = {
+    if (wideningCounts.getOrElseUpdate(currPos, 0) >= wideningThreshold) {
+      println(Console.RED_B + "WIDENING STARTED" + Console.RESET)
+      // no need to increase the counter since we already exceeded the
+      // widening threshold
+      state1 ∇ state2
+    } else {
+      wideningCounts(currPos) = wideningCounts(currPos) + 1
+      state1 ⊔ state2
+    }
+  }
 
   override def executeInstruction(vm: VM, thread: ThreadInfo, insn: Instruction): Unit = {
     if (! insn.getMethodInfo.getLongName.contains(methodToAnalyze)) {
@@ -56,7 +73,7 @@ class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListen
               val slot = sf.getSlot(i)
               val obj = vm.getHeap.get(slot)
               if (obj.isStringObject) {
-                StringValue(StringConst(obj.asString))
+                StringValue(Option(obj.asString).map(StringConst(_)).getOrElse(NoStringExpr))
               } else {
                 // TODO: create an abstract domain for references for this case
                 NumValue(NumConst(sf.getSlot(i)))
@@ -68,7 +85,7 @@ class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListen
           case e:string.SymbolicStringBuilder ⇒ StringValue(Option(e.getstr) map Helpers.parseStrExpr getOrElse NoStringExpr)
           case e:numeric.IntegerExpression ⇒ NumValue(Helpers.parseNumExpr(e))
         }
-    val state: Domain = NonrelationalDomain[Prefix, TrivialNumber]()
+    val state: Domain = NonrelationalDomain[Prefix, AbstractInterval]()
     state.construct(pathCondition, stack)
 
     // Alternative strategy:
@@ -78,7 +95,7 @@ class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListen
     } else {
       states(pos) = states(pos) + state
     }
-    println(s"$pos: $state")
+    // println(s"$pos: $state")
     /**
     if (! states.contains(pos)) {
       states = states + (pos → state)
@@ -98,7 +115,7 @@ class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListen
 
     for (insn ← states.keys.toSeq.sorted) {
       // join all states that are seen so far
-      val state = states(insn).reduce(_ ⊔ _)
+      val state = states(insn).reduceRight(joinOrWiden(insn))
       pw.println(s"${lineNumbers(insn)}: insn$insn: $state")
     }
   }
