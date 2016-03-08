@@ -1,0 +1,44 @@
+target=test.Example
+
+native_classpath=${user.home}/lab/jpf/jpf-swag/target/scala-2.11/jpf-swag.jar
+
+# here write your own classpath and un-comment
+classpath=.
+
+# method to start symbolic execution
+symbolic.method=test.Example.lastIdx(sym)
+# method to ocmpute fixpoints in
+fixpoint.method=lastIdx
+# widening threshold, default=1
+fixpoint.widening_threshold=10000
+# depth limit for the symbolic execution
+search.depth_limit = 10
+
+# listener to print information (PCs, test cases) about symbolic run
+
+# Converging ixpoint listener
+listener=edu.ucsb.cs.jpf.swag.FixpointListener
+# Just discovery, the one in progress report
+# listener=edu.ucsb.cs.jpf.swag.FixpointDiscoveryListener
+# To see the path conditions
+# listener+=,edu.ucsb.cs.jpf.swag.PCListener
+# listener+=,gov.nasa.jpf.symbc.SymbolicListener
+
+############################################################
+# The following JPF options are usually used for SPF as well:
+
+# no state matching
+
+vm.storage.class=nil
+
+# instruct jpf not to stop at first error
+
+search.multiple_errors=true
+
+# symbc options:
+
+# symbolic.dp=choco
+# don't use a solver for now to see all the paths
+symbolic.dp=no_solver
+symbolic.strings=true
+symbolic.lazy = off
