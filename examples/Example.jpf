@@ -7,7 +7,7 @@ classpath=.
 
 # method to start symbolic execution
 symbolic.method=test.Example.lastIdx(sym)
-# method to ocmpute fixpoints in
+# method to compute fixpoints in
 fixpoint.method=lastIdx
 # widening threshold, default=1
 fixpoint.widening_threshold=10000
@@ -20,6 +20,7 @@ search.depth_limit = 10
 listener=edu.ucsb.cs.jpf.swag.FixpointListener
 # Just discovery, the one in progress report
 # listener=edu.ucsb.cs.jpf.swag.FixpointDiscoveryListener
+
 # To see the path conditions
 # listener+=,edu.ucsb.cs.jpf.swag.PCListener
 # listener+=,gov.nasa.jpf.symbc.SymbolicListener
