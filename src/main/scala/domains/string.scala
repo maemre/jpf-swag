@@ -47,6 +47,8 @@ sealed trait Prefix extends AbstractString[Prefix] {
       } else {
         PrefixS(lcp(w, v))
       }
+    case (PrefixS(w), PrefixS(v)) ⇒
+        PrefixS(lcp(w, v))
   }
 
   def ⊑(s: Prefix): Boolean
