@@ -82,6 +82,10 @@ case class Conjunction(conjuncts: Set[Constraint]) extends Constraint {
     case _ ⇒ Conjunction(conjuncts + that)
   }
 
+  override def toString() = {
+    conjuncts.mkString(", ")
+  }
+
   def toSPFConstraint = conjuncts.map(_.toSPFConstraint) reduce { (l, r) ⇒
     val n = (l._1, r._1) match {
       case (Some(l), Some(r)) ⇒
@@ -190,7 +194,7 @@ case class StringConstraint(lhs: StringExpr, op: StringComparator, rhs: StringEx
   def removePrime = copy(lhs.removePrime, op, rhs.removePrime)
 }
 case class NumericConstraint(lhs: NumExpr, op: NumComparator, rhs: NumExpr) extends Constraint {
-  override def toString = s"${NumComparator.toString(op)} $lhs $rhs"
+  override def toString = s"$lhs ${NumComparator.toString(op)} $rhs"
 
   def toSPFConstraint = {
     val left = lhs.toSPFExpr
@@ -313,6 +317,15 @@ object NumBinop extends Enumeration {
   type NumBinop = Value
   val ⌜+⌝, ⌜-⌝, ⌜*⌝, ⌜/⌝, ⌜%⌝ = Value
 
+  def toString(n: NumBinop): String = n match {
+    case ⌜+⌝ ⇒ "+"
+    case ⌜-⌝ ⇒ "-"
+    case ⌜*⌝ ⇒ "*"
+    case ⌜/⌝ ⇒ "/"
+    case ⌜%⌝ ⇒ "%"
+  }
+
+  /*
   override def toString = this match {
     case ⌜+⌝ ⇒ "+"
     case ⌜-⌝ ⇒ "-"
@@ -321,6 +334,7 @@ object NumBinop extends Enumeration {
     case ⌜%⌝ ⇒ "%"
     case NumBinop ⇒ "NumBinop"
   }
+  */
 }
 
 import NumBinop._
@@ -364,17 +378,20 @@ case class LastIndexOf(s: StringExpr, c: CharExpr) extends NumExpr {
   def removePrime = copy(s.removePrime)
 }
 case class NumVar(name: String) extends NumExpr {
+  override def toString() = name
   def toSPFExpr = new numeric.SymbolicInteger(name)
-
   def addPrime = NumVar(Helpers.addPrime(name))
   def removePrime = NumVar(Helpers.removePrime(name))
 }
 case class NumConst(n: Long) extends NumExpr {
+  override def toString() = n.toString
   def toSPFExpr = new numeric.IntegerConstant(n)
   def addPrime = this
   def removePrime = this
 }
 case class NumBinopExpr(lhs: NumExpr, op: NumBinop, rhs: NumExpr) extends NumExpr {
+  override def toString() = s"$lhs ${NumBinop.toString(op)} $rhs"
+
   def toSPFExpr = {
     val left = lhs.toSPFExpr
     val right = rhs.toSPFExpr
