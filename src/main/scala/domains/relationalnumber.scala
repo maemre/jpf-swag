@@ -146,7 +146,8 @@ extends RelationalNumber[RelationalNumberDomain] {
   def addConstraint(c: Constraint): RelationalNumberDomain = c match {
     case Not(c: Constraint) ⇒  ??? // TODO ...
     case Disjunction(disjuncts) ⇒  ??? // TODO ...
-    case Conjunction(conjuncts) ⇒  sys.error("should be given in CNF")
+    case Conjunction(conjuncts) ⇒
+      conjuncts.foldLeft(this)((dom, c) ⇒ dom.addConstraint(c))
     case True ⇒  this/* ignore for now */
     case False ⇒  this /* ignore for now */
     case s:StringConstraint ⇒  this /* later */
@@ -260,12 +261,12 @@ object OctagonManager {
 object PolyhedraManager {
   def apply(): Polka = new Polka(false)
 }
-object PplPoly {
+/*object PplPoly {
   def apply(): PplPoly = new PplPoly(false)
 }
-
+ */
 object Debug {
-  var debug = true
+  var debug = false
 
   def print(s: String) = if (debug) println(s)
 }
