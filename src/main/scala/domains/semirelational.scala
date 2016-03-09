@@ -9,7 +9,12 @@ import Helpers.ι
 
 case class SemirelationalDomain[Str <: RelationalString[Str], Num <: RelationalNumber[Num]](
   var str: Str,
-  var num: Num) extends CompositeAbstractDomain[SemirelationalDomain[Str, Num]] {
+  var num: Num
+)
+  /*(
+  strTop: ⇒ Str,
+  numTop: ⇒ Num
+)*/ extends CompositeAbstractDomain[SemirelationalDomain[Str, Num]] {
   def construct(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
     val numConstraints = MSet[Constraint](pathCondition)
     val strConstraints = MSet[Constraint](pathCondition)
@@ -26,25 +31,24 @@ case class SemirelationalDomain[Str <: RelationalString[Str], Num <: RelationalN
     this
   }
 
-  def transit(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = {
-    // Symbols are from "PostHat and All That"
-    // γ^(a)
-    val oldState = addPrime(this.toConstraint)
-    // φ_τ
-    val transition = MSet[Constraint](addPrime(pathCondition))
-    for ((s, i) ← stack.zipWithIndex) s match {
-      case NumValue(e) ⇒
-        transition += addPrime(NumVar(StackID(i).toString) ≡ e)
-      case StringValue(e) ⇒
-        transition += addPrime(StringVar(StackID(i).toString) ≡ e)
-    }
-    val φ_τ = Conjunction(transition.toSet)
-    val primed = SemirelationalDomain[Str, Num](???, ???).construct(oldState & φ_τ, IndexedSeq())
-    ??? // primed.projectToPrimes.removePrime
-  }
+  def transit(pathCondition: Constraint, stack: IndexedSeq[StackValue]) = ???
+  // {
+  //   // Symbols are from "PostHat and All That"
+  //   // γ^(a)
+  //   val oldState = this.toConstraint.addPrime
+  //   // φ_τ
+  //   val transition = MSet[Constraint](pathCondition.addPrime)
+  //   for ((s, i) ← stack.zipWithIndex) s match {
+  //     case NumValue(e) ⇒
+  //       transition += (NumVar(StackID(i).toString) ≡ e).addPrime
+  //     case StringValue(e) ⇒
+  //       transition += (StringVar(StackID(i).toString) ≡ e).addPrime
+  //   }
+  //   val φ_τ = Conjunction(transition.toSet)
+  //   val primed = SemirelationalDomain[Str, Num](strTop, numTop).construct(oldState & φ_τ, IndexedSeq())
+  //   ??? // primed.projectToPrimes.toConstraint.removePrime
+  // }
 
-  def addPrime(c: Constraint): Constraint = ???
-  def removePrime(c: Constraint): Constraint = ???
   def projectToPrimes: SemirelationalDomain[Str, Num] = ???
 
   def ⊔(that: SemirelationalDomain[Str, Num]) = {
@@ -60,15 +64,18 @@ case class SemirelationalDomain[Str <: RelationalString[Str], Num <: RelationalN
 
   def projectTo(id: Int): Option[Constraint] = projectTo(StackID(id))
   def projectTo(name: String): Option[Constraint] = projectTo(Name(name))
-  
-  def projectTo(id: ID) = {
-    ???
+
+  def projectTo(id: ID): Option[Constraint] = {
+    val nc = num.projectTo(id)
+    val sc = str.projectTo(id)
+    // extract nc and sc to compute conjunction, if one is missing return other
+    nc.map(c ⇒ sc.map(c & _).getOrElse(c)).orElse(sc)
   }
 
   def projectOut(id: Int): SemirelationalDomain[Str, Num] = projectOut(StackID(id))
   def projectOut(name: String): SemirelationalDomain[Str, Num] = projectOut(Name(name))
 
-  def projectOut(id: ID): SemirelationalDomain[Str, Num] = ???
+  def projectOut(id: ID): SemirelationalDomain[Str, Num] = SemirelationalDomain(str.projectOut(id), num.projectOut(id))
 
   // TODO: add constraint propagation (here maybe)
   def toConstraint: Constraint = num.toConstraint & str.toConstraint
@@ -76,15 +83,4 @@ case class SemirelationalDomain[Str <: RelationalString[Str], Num <: RelationalN
   override def toString = s"SemirelationalDomain(\n$num\n$str)"
 
   def getVars = ???
-}
-
-/**
-  * Wrapper class to integrate nonrelational string domains into semirelational
-  * string domains.
-  */
-class SemirelationalStringWrapper[Str <: AbstractString[Str]](
-  implicit val strFactory: AbstractStringFactory[Str]) {
-  val i2s: Map[ID, Str] = Map()
-
-  ???
 }
