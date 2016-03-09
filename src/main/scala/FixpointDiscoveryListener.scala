@@ -22,7 +22,7 @@ import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 
 class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListenerAdapter with PublisherExtension {
-  type Domain = NonrelationalDomain[Prefix, AbstractInterval]
+  type Domain = SemirelationalDomain[SemirelationalStringWrapper[Prefix], RelationalNumberDomain] // NonrelationalDomain[Prefix, AbstractInterval]
   type IP = Int // (Int, Int)
   implicit val intervalFactory = Interval
   implicit val regexFactory = RegexDomain
@@ -85,7 +85,7 @@ class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListen
           case e:string.SymbolicStringBuilder ⇒ StringValue(Option(e.getstr) map Helpers.parseStrExpr getOrElse NoStringExpr)
           case e:numeric.IntegerExpression ⇒ NumValue(Helpers.parseNumExpr(e))
         }
-    val state: Domain = NonrelationalDomain[Prefix, AbstractInterval]()
+    val state: Domain = SemirelationalDomain(SemirelationalStringWrapper[Prefix](), RelationalNumberDomain(new apron.Polka(true)))
     state.construct(pathCondition, stack)
 
     // Alternative strategy:
