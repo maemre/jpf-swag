@@ -8,6 +8,7 @@ public class Example {
         //ex.twoifs(1, 100);
         ex.bar(1, 100);
         ex.lastIdx("foo");
+        ex.strLoop("foobar???");
     }
 
     public String foo(int n) {
@@ -59,5 +60,14 @@ public class Example {
             return n - 1;
         }
         return -1;
+    }
+
+    public int strLoop(String x) {
+        int a = 0;
+        for (int i = 0; i < x.length(); ++i) {
+            if (x.charAt(i) == '?')
+                a++;
+        }
+        return a;
     }
 }

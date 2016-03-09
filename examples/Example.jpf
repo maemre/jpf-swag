@@ -6,9 +6,9 @@ native_classpath=${user.home}/lab/jpf/jpf-swag/target/scala-2.11/jpf-swag.jar
 classpath=.
 
 # method to start symbolic execution
-symbolic.method=test.Example.lastIdx(sym)
+symbolic.method=test.Example.strLoop(sym)
 # method to compute fixpoints in
-fixpoint.method=lastIdx
+fixpoint.method=strLoop
 # widening threshold, default=1
 fixpoint.widening_threshold=10000
 # depth limit for the symbolic execution
@@ -17,9 +17,9 @@ search.depth_limit = 10
 # listener to print information (PCs, test cases) about symbolic run
 
 # Converging ixpoint listener
-listener=edu.ucsb.cs.jpf.swag.FixpointListener
+# listener=edu.ucsb.cs.jpf.swag.FixpointListener
 # Just discovery, the one in progress report
-# listener=edu.ucsb.cs.jpf.swag.FixpointDiscoveryListener
+  listener=edu.ucsb.cs.jpf.swag.FixpointDiscoveryListener
 
 # To see the path conditions
 # listener+=,edu.ucsb.cs.jpf.swag.PCListener
