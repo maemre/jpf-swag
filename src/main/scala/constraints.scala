@@ -341,6 +341,7 @@ sealed trait NumExpr {
   def >(that:NumExpr) = NumericConstraint(this, NumComparator.>, that)
   def ≥(that:NumExpr) = NumericConstraint(this, NumComparator.≥, that)
   def ≡(that:NumExpr) = NumericConstraint(this, NumComparator.≡, that)
+  def ≠(that:NumExpr) = NumericConstraint(this, NumComparator.≠, that)
 
   def toSPFExpr: numeric.IntegerExpression
 
