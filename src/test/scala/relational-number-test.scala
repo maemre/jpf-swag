@@ -1,5 +1,6 @@
 import edu.ucsb.cs.jpf.swag.domains._
 import edu.ucsb.cs.jpf.swag.constraints._
+import edu.ucsb.cs.jpf.swag.helpers._
 import edu.ucsb.cs.jpf.swag._
 import org.scalatest._
 
@@ -89,6 +90,7 @@ class RelationalNumberSpec extends FlatSpec {
   println(s"In IR      : ${conjunction4.toString}")
   println(s"In Apron   : ${rnd.toString}")
   println(s"Back to IR : ${rnd.toConstraint.toString}")
+  println(s"Project out a: ${rnd.projectOut(Name("a")).toString}")
   println(s"IR-to-Apron Mapping: ${rnd.showIR2ApronMap}")
 
   // 5 < d
@@ -109,6 +111,7 @@ class RelationalNumberSpec extends FlatSpec {
   println(s"In IR      : ${conjunction8.toString}")
   println(s"In Apron   : ${rnd.toString}")
   println(s"Back to IR : ${rnd.toConstraint.toString}")
+  println(s"Project out a: ${rnd.projectOut(Name("a")).toString}")
   println(s"IR-to-Apron Mapping: ${rnd.showIR2ApronMap}")
 
   // 2(a * 5) + (b * 2) > 2, a + b < (3 + a)
@@ -138,6 +141,19 @@ class RelationalNumberSpec extends FlatSpec {
   println(s"Test9 (result of join): ${rnd3.toString}")
   println(s"Back to IR: ${rnd3.toConstraint.toString}")
   println(s"IR-to-Apron Mapping: ${rnd3.showIR2ApronMap}")
+
+  // (a/3) > 8
+  /*
+  val ne5 = NumVar("a")./(NumConst(3))
+  val nc3 = (ne5).>(NumConst(8))
+  val cj1 = Conjunction(nc3)
+  println("\nStarting Test10")
+  rnd.construct(cj1)
+  println(s"In IR      : ${cj1.toString}")
+  println(s"In Apron   : ${rnd.toString}")
+  println(s"Back to IR : ${rnd.toConstraint.toString}")
+  println(s"IR-to-Apron Mapping: ${rnd.showIR2ApronMap}")
+  */
 
   /*
   // TODO eventually with string constraints involved...

@@ -86,7 +86,7 @@ extends RelationalNumber[RelationalNumberDomain] {
 
   /* Side-effect of adding to map */
   def parseNumExpr(expr: NumExpr): CoefficientMap = {
-    //Debug.print(s"Parsing: $expr")
+    Debug.print(s"Parsing: $expr")
     expr match {
       case Length(strExpr) ⇒  CoefficientMap()
       case IndexOf(strExpr, chExpr) ⇒  CoefficientMap()
@@ -106,7 +106,9 @@ extends RelationalNumber[RelationalNumberDomain] {
             case _ ⇒ sys.error("non-linear constraint")
           }
           case NumBinop.⌜/⌝ ⇒  (lMap, rMap) match {
-            /* same as above */
+            // TODO fix...since we're dealing with linear constraints,
+            //  division won't really work, we need to multiply everything
+            //  else by this divisor, i.e. a/3 > 8 ⇒ a > 24
             case (m1@CoefficientMap(mp, c), m2) if mp.isEmpty ⇒ m2.applyConst(c, _/_)
             case (m1, m2@CoefficientMap(mp, c)) if mp.isEmpty ⇒ m1.applyConst(c, _/_)
             case _ ⇒ sys.error("non-linear constraint")
@@ -134,8 +136,10 @@ extends RelationalNumber[RelationalNumberDomain] {
     ???
   }
 
+  /* Side-effect: changes this */
   def projectOut(id: ID): RelationalNumberDomain = {
-    ???
+    absNumber.forget(man, Array(id.toString()), true)
+    this
   }
 
   // add extra constraint
@@ -243,7 +247,7 @@ object ApronVar {
   /* Uncomment the following to use the IR's variable names directly in Apron */
   def apply(v: NumVar): ApronVar = ApronVar(v.name, v)
 
-  /* Uncomment the following to use fresh, unique-to-Apron variable names */
+  /* Uncomment the following to use fresh, unique-to-Apron variable names. This isn't working with join, so using the above */
   //def apply(v: NumVar): ApronVar = { counter += 1; ApronVar("V" + counter.toString, v) }
 }
 
@@ -261,7 +265,7 @@ object PplPoly {
 }
 
 object Debug {
-  var debug = false
+  var debug = true
 
   def print(s: String) = if (debug) println(s)
 }
