@@ -75,10 +75,12 @@ trait RelationalString[T] extends AbstractDomain[T] {
 
   // Get length constraint over a variable
   // used for communicating length back-and-forward
-  def lengthConstraint(id: ID): T
+  def lengthConstraint(id: ID, l: String): Option[Constraint]
 
   // Constraint representation of this abstract domain
   def toConstraint: Constraint
+
+  def toConstraint(v: String) = ???
 }
 
 trait RelationalNumber[T] extends AbstractDomain[T] {
