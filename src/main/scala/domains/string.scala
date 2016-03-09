@@ -166,21 +166,71 @@ case class LengthDomain[Num <: AbstractNumber[Num]](n: Num)(implicit val nGen: A
 }
 
 case class RegexDomain(str: widenedstrings.Str) extends AbstractString[RegexDomain] {
+  import widenedstrings._
   // Members declared in AbstractDomain
-  def ⊑(that: RegexDomain): Boolean = ??? // TODO: Couldn't find it, ask Lawton
-  def ⊔(that: RegexDomain): RegexDomain = RegexDomain((this.str ⊔ that.str).asInstanceOf[widenedstrings.Str])
-  def toConstraint(v: String): Constraint = ??? // TODO: We may need to invent a new constraint type for this
+  def ⊑(that: RegexDomain): Boolean = (this.str, that.str) match {
+    case (widenedstrings.StrBot, _) ⇒ true
+    case (a:widenedstrings.Reg, b: widenedstrings.Reg) ⇒ a.toAutomaton subsetOf b.toAutomaton
+    case _ ⇒ false
+  }
+
+  def ⊔(that: RegexDomain): RegexDomain = {
+    val r = RegexDomain((this.str ⊔ that.str).asInstanceOf[widenedstrings.Str])
+    println(s"$str ⊔ ${that.str} = ${r.str}")
+    r
+  }
+
+  def toConstraint(v: String): Constraint = str match {
+    case str:Reg ⇒ StringVar(v) matches StringConst(str.toString)
+    case _ ⇒ False
+  }
 
   // Members declared in AbstractString
   def concat(that: RegexDomain): RegexDomain = RegexDomain((this.str + that.str).asInstanceOf[widenedstrings.Str])
   def indexOf(c: CharExpr): NumExpr = ???
   def lastIndexOf(c: CharExpr): NumExpr = ???
   def length(v: String): Constraint = ???
-  def replace(m:RegexDomain, r:RegexDomain): RegexDomain = ???
-  def replaceAll(m:RegexDomain, r:RegexDomain): RegexDomain = ???
-  def replaceFirst(m:RegexDomain, r:RegexDomain): RegexDomain = ???
-  def substring(i: NumExpr): RegexDomain = ???
-  def toLowerCase: RegexDomain = ???
-  def toUpperCase: RegexDomain = ???
+  def replace(m:RegexDomain, r:RegexDomain): RegexDomain = (m.str, r.str) match {
+    case (Reg(Seq(CharacterAtom(c1))), Reg(Seq(CharacterAtom(c2)))) if c1.size == 1 && c2.size == 1 ⇒ RegexDomain(str.replace(c1.head, c2.head))
+    case _ ⇒ RegexDomain(Str.⊤)
+  }
+  def replaceAll(m:RegexDomain, r:RegexDomain): RegexDomain = RegexDomain(Str.⊤)
+  def replaceFirst(m:RegexDomain, r:RegexDomain): RegexDomain = (m.str, r.str) match {
+    case (Reg(Seq(CharacterAtom(c1))), Reg(Seq(CharacterAtom(c2)))) if c1.size == 1 && c2.size == 1 ⇒ RegexDomain(str.replace(c1.head, c2.head))
+    case _ ⇒ RegexDomain(Str.⊤)
+  }
+  def substring(i: NumExpr): RegexDomain = RegexDomain(Str.⊤)
+
+  def toLowerCase: RegexDomain = str match {
+    case Reg(chars) ⇒
+      val c = chars map {
+        case CharacterAtom(cs) ⇒ CharacterAtom(cs.map(_.toLower))
+        case a ⇒ a
+      }
+      RegexDomain(Reg(c))
+    case _ ⇒ RegexDomain(Str.⊥)
+  }
+
+  def toUpperCase: RegexDomain = str match {
+    case Reg(chars) ⇒
+      val c = chars map {
+        case CharacterAtom(cs) ⇒ CharacterAtom(cs.map(_.toUpper))
+        case a ⇒ a
+      }
+      RegexDomain(Reg(c))
+    case _ ⇒ RegexDomain(Str.⊥)
+  }
+
   def trim = RegexDomain(str.trim)
+}
+
+object RegexDomain extends AbstractStringFactory[RegexDomain] {
+  val ⊥ = RegexDomain(widenedstrings.Str.⊥)
+  val ⊤ = RegexDomain(widenedstrings.Str.⊤)
+
+  def const(s: String) = RegexDomain(widenedstrings.Str.α2(s))
+  def valueOf(n: NumExpr) = n match {
+    case NumConst(c) ⇒ const(c.toString)
+    case _ ⇒ ⊤
+  }
 }
