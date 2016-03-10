@@ -29,14 +29,14 @@ class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListen
 
   val wideningThreshold = Option(config.getString("fixpoint.widening_threshold")).getOrElse("1").toInt
   val methodToAnalyze = config.getString("fixpoint.method")
-  val states = MMap[IP, Set[Domain]]()
+  val states = MMap[IP, Seq[Domain]]()
   val wideningCounts = MMap[IP, Int]()
   val lineNumbers = MMap[Int, Int]()
   jpf.addPublisherExtension(classOf[ConsolePublisher], this)
 
   def joinOrWiden(currPos: IP)(state1: Domain, state2: Domain): Domain = {
     if (wideningCounts.getOrElseUpdate(currPos, 0) >= wideningThreshold) {
-      println(Console.RED_B + "WIDENING STARTED" + Console.RESET)
+      // println(Console.RED_B + "WIDENING STARTED" + Console.RESET)
       // no need to increase the counter since we already exceeded the
       // widening threshold
       state1 ∇ state2
@@ -91,9 +91,9 @@ class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListen
     // Alternative strategy:
     // Collect all states, then merge paths later on
     if (! states.contains(pos)) {
-      states(pos) = Set(state)
+      states(pos) = Seq(state)
     } else {
-      states(pos) = states(pos) + state
+      states(pos) = state +: states(pos)
     }
     // println(s"$pos: $state")
     /**
@@ -115,7 +115,7 @@ class FixpointDiscoveryListener(config: Config, jpf: JPF) extends PropertyListen
 
     for (insn ← states.keys.toSeq.sorted) {
       // join all states that are seen so far
-      val state = states(insn).reduceRight(joinOrWiden(insn))
+      val state = states(insn).reduceLeft(joinOrWiden(insn))
       pw.println(s"${lineNumbers(insn)}: insn$insn: $state")
     }
   }
